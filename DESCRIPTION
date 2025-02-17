@@ -2,7 +2,7 @@ Type: Package
 Package: geocodebr
 Title: Geolocalização De Endereços Brasileiros (Geocoding Brazilian
         Addresses)
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
     person("Rafael H. M.", "Pereira", , "rafa.pereira.br@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2125-7465")),
@@ -35,11 +35,11 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2025-02-11 18:50:14 UTC; user
+Packaged: 2025-02-17 20:12:46 UTC; r1701707
 Author: Rafael H. M. Pereira [aut, cre]
     (<https://orcid.org/0000-0003-2125-7465>),
   Daniel Herszenhut [aut] (<https://orcid.org/0000-0001-8066-1105>),
   Ipea - Instituto de Pesquisa Econômica Aplicada [cph, fnd]
 Maintainer: Rafael H. M. Pereira <rafa.pereira.br@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-02-12 20:00:02 UTC
+Date/Publication: 2025-02-17 20:30:02 UTC

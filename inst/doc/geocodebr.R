@@ -10,11 +10,11 @@ knitr::opts_chunk$set(
 Sys.setenv(OMP_THREAD_LIMIT = 2)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  install.packages("geocodebr")
+# install.packages("geocodebr")
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  # install.packages("remotes")
-#  remotes::install_github("ipeaGIT/geocodebr")
+# # install.packages("remotes")
+# remotes::install_github("ipeaGIT/geocodebr")
 
 ## -----------------------------------------------------------------------------
 library(geocodebr)
