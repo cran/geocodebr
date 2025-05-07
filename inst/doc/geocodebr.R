@@ -17,36 +17,66 @@ Sys.setenv(OMP_THREAD_LIMIT = 2)
 # remotes::install_github("ipeaGIT/geocodebr")
 
 ## -----------------------------------------------------------------------------
-library(geocodebr)
-
-# leitura de amostra de dados
-ends <- read.csv(system.file("extdata/small_sample.csv", package = "geocodebr"))
-
-# definição dos campos de endereço
-campos <- definir_campos(
-  estado = "nm_uf",
-  municipio = "nm_municipio",
-  logradouro = "nm_logradouro",
-  numero = "Numero",
-  cep = "Cep",
-  localidade = "Bairro"
-)
+# library(geocodebr)
+# library(sf)
+# 
+# # carregando uma amostra de dados
+# input_df <- read.csv(system.file("extdata/small_sample.csv", package = "geocodebr"))
+# 
+# # Primeiro passo: inidicar o nome das colunas com cada campo dos enderecos
+# campos <- geocodebr::definir_campos(
+#   logradouro = "nm_logradouro",
+#   numero = "Numero",
+#   cep = "Cep",
+#   localidade = "Bairro",
+#   municipio = "nm_municipio",
+#   estado = "nm_uf"
+# )
+# 
+# # Segundo passo: geolocalizar
+# df <- geocodebr::geocode(
+#   enderecos = input_df,
+#   campos_endereco = campos,
+#   resultado_completo = FALSE,
+#   resolver_empates = FALSE,
+#   resultado_sf = FALSE,
+#   verboso = FALSE,
+#   cache = TRUE,
+#   n_cores = 1
+# )
+# 
 
 ## -----------------------------------------------------------------------------
-# geolicalização
-ends_geo <- geocode(
-  enderecos = ends, 
-  campos_endereco = campos, 
-  resultado_completo = FALSE,
-  resolver_empates = TRUE,
-  resultado_sf = FALSE,
-  verboso = FALSE
-  )
-
-head(ends_geo)
+# # amostra de pontos espaciais
+# pontos <- readRDS(
+#   system.file("extdata/pontos.rds", package = "geocodebr")
+# )
+# 
+# # seleciona somente os primeiros 20 pontos
+# pontos <- pontos[1:20,]
+# 
+# # geocode reverso
+# df_enderecos <- geocodebr::geocode_reverso(
+#   pontos = pontos,
+#   dist_max = 1000,
+#   verboso = FALSE,
+#   n_cores = 1
+# )
+# 
 
 ## -----------------------------------------------------------------------------
-listar_pasta_cache()
+# # amostra de CEPs
+# ceps <- c("70390-025", "20071-001")
+# 
+# df_ceps <- geocodebr::busca_por_cep(
+#   cep = ceps,
+#   resultado_sf = FALSE,
+#   verboso = FALSE
+# )
+# 
 
-listar_dados_cache()
+## -----------------------------------------------------------------------------
+# geocodebr::listar_pasta_cache()
+# 
+# geocodebr::listar_dados_cache()
 

@@ -1,18 +1,3 @@
-#' rua ipe roxo em sp
-
-
-#' ja implementado casos de empate
-#' - avalilar nome de coluna empate_geocodebr
-#' - avalilar tolerancia de 150 metros
-#'
-
-
-#' TO DO
-#'
-#' a) estrateia de montar output: com empty db ou tabelas separadas por case_match ?
-#' b) manter columna matched_address
-
-#'
 #' instalar extensoes do duckdb
 #' - spatial - acho q nao vale a pena por agora
 #'
@@ -65,7 +50,6 @@ data_path <- system.file("extdata/large_sample.parquet", package = "geocodebr")
 input_df <- arrow::read_parquet(data_path)
 
 
-
 # enderecos = input_df
 # n_cores = 7
 # ncores <- 7
@@ -101,18 +85,56 @@ campos <- geocodebr::definir_campos(
 
 # test probabilistic
 # input_df <- input_df[c(7, 32, 34, 71, 173, 1348)]  # pn02 pi02 pn03 pi03 pr01 pr02
+# temp_df <- filter(input_df,id %in% c(1371)  )
 
-bench::system_time(
-  dfgeo2 <- geocodebr::geocode(
+
+bench::mark( iterations = 1,
+  temp_dfgeo2 <- geocodebr::geocode(
     enderecos = input_df,
     campos_endereco = campos,
     n_cores = ncores,
     resultado_completo = T,
     verboso = T,
     resultado_sf = F,
-    resolver_empates = T
+    resolver_empates = F
   )
 )
+# sequencia de matches
+#   expression    min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     time       gc
+# 2nd best      25.7s  25.7s    0.0389    67.1MB    0.350     1     9      25.7s ;;787 empates
+# ideal         23.8s  23.8s    0.0420    38.1MB    0.378     1     9      23.8s ;;724
+
+
+# expression       min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory
+# <bch:expr>     <bch> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list> <list>
+#   current      1.01m  1.01m    0.0165    81.3MB    0.182     1    11      1.01m <dt>   <Rprofmem>
+#   ender_arrw   59.6s  59.6s    0.0168    81.2MB    0.201     1    12      59.6s <dt>   <Rprofmem>
+#                40.2s  40.2s    0.0249      83MB    0.323     1    13      40.2s <dt>   <Rprofmem>
+#                30.3s  30.3s    0.0330    71.8MB    0.363     1    11      30.3s <dt>   <Rprofmem> 715 empates
+#                26.2s  26.2s    0.0382    70.3MB    0.343     1     9      26.2s <dt>   <Rprofmem> 722
+#                24.5s  24.5s    0.0409    70.3MB    0.368     1     9      24.5s <dt>   <Rprofmem> 722
+#                24.1s  24.1s    0.0414    63.8MB    0.373     1     9      24.1s <dt>   <Rprofmem> 704
+# prob befo det  24.4s  24.4s    0.0411    39.3MB    0.411     1    10      24.4s <dt>   <Rprofmem> 723
+# prob after det 24.9s  24.9s    0.0401      67MB    0.401     1    10      24.9s <dt>   <Rprofmem> 810
+#                match prob
+# filter               25.7s  25.7s    0.0389    63.8MB    0.350     1     9      25.7s <dt>   <Rprofmem> <bench_tm>
+# distinct             27s    27s    0.0371    91.1MB    0.334     1     9        27s <dt>   <Rprofmem> <bench_tm>
+
+# 20K prob numero pn
+# atual:   46.69s / 706 empates
+# old:     34.91s / 783
+# 20250318 40.21s / 698 empates
+
+# 1.56m com arrow distinct
+# 1.47m com parquet no pn
+# 1.90m com parquet no pn e pa
+# 1.6 com write arrwo table   >>>>>>>>>>>> implementar com certeza
+# 1.3m e arrow distinc
+# 1.32m e arrow distinc  e outuop_arrw
+# 1.06m e arrow distinc  e outuop_arrw e sendQueryArrow (na tomada)
+# 1.06m isso + tudo com sendQueryArrow  (na tomada)
+
+
 
 empates <- subset(dfgeo, empate==T)
 a <- table(empates$id) |> as.data.frame()
@@ -135,46 +157,12 @@ round(table(dfgeo2$precisao) / nrow(dfgeo2) *100, 1)
 # com   2.5               0.3              14.8               0.6              45.8              36.0
 # sem  31.4               2.3               7.2               0.6              33.3              26.2
 
-temp <- left_join( select(dfgeo2, id, tipo_resultado), select(dfgeo, id, tipo_resultado), by = 'id'  )
+temp <- left_join( select(dfgeo, id, tipo_resultado), select(dfgeo2, id, tipo_resultado), by = 'id'  )
 t <- table(temp$tipo_resultado.x, temp$tipo_resultado.y) |> as.data.frame()
+t <- filter(t, Freq>0)
+View(t)
 
 
-setDT(dfgeo)
-dfgeo[, empate := ifelse(.N>1,1,0), by = id]
-a <- dfgeo[empate==1]
-table(a$precisao)
-
-
-
-dt.haversine <- function(lat_from, lon_from, lat_to, lon_to, r = 6378137){
-  radians <- pi/180
-  lat_to <- lat_to * radians
-  lat_from <- lat_from * radians
-  lon_to <- lon_to * radians
-  lon_from <- lon_from * radians
-  dLat <- (lat_to - lat_from)
-  dLon <- (lon_to - lon_from)
-  a <- (sin(dLat/2)^2) + (cos(lat_from) * cos(lat_to)) * (sin(dLon/2)^2)
-  return(2 * atan2(sqrt(a), sqrt(1 - a)) * r)
-}
-a <- a[order(id)]
-
-a[, dist := round(dt.haversine(lat, lon, shift(lat), shift(lon))), by=id]
-a[, dist := fifelse(is.na(dist), 0, dist)]
-
-unique(a$id) |> length()
-# 132 casos olhand para niveis 2, 3, e 4
-
-summary(a$dist)
-
-# dist menor do q 100 metros, fica com 1o
-#
-a2 <- filter(a, dist == 0 | dist > 100)
-
-library(profvis)
-profvis({
-  rafaT()
-})
 
 
 
@@ -248,15 +236,14 @@ d <- cnf |>
 
 
 # small sample data ------------------------------------------------------------------
-library(geocodebr)
+devtools::load_all('.')
+library(dplyr)
 
 # open input data
 data_path <- system.file("extdata/small_sample.csv", package = "geocodebr")
 input_df <- read.csv(data_path)
 
-
-
-fields <- geocodebr::definir_campos(
+campos <- geocodebr::definir_campos(
   logradouro = "nm_logradouro",
   numero = "Numero",
   cep = "Cep",
@@ -265,16 +252,16 @@ fields <- geocodebr::definir_campos(
   estado = "nm_uf"
 )
 
-
 # enderecos = input_df
 # campos_endereco = campos
 # n_cores = 7
 # verboso = T
 # cache=T
 # resultado_completo=T
+# resolver_empates = FALSE
+# resultado_sf = FALSE
 
-rafaF <- function(){ message('rafa F')
-  df_rafaF2 <- geocodebr::geocode(
+dfgeo <- geocodebr::geocode(
     enderecos = input_df,
     campos_endereco = campos,
     n_cores = 7,
@@ -282,7 +269,7 @@ rafaF <- function(){ message('rafa F')
     resolver_empates = T,
     verboso = T
   )
-}
+
 
 identical(df_rafaF$id, input_df$id)
 
@@ -295,31 +282,3 @@ unique(df_rafa$match_type) |> length()
 table(df_rafa$match_type)
 
 
-  # en01: logradouro, numero, cep e bairro
-  # en02: logradouro, numero e cep
-  # en03: logradouro, numero e bairro
-  # en04: logradouro e numero
-      # pn01: logradouro, numero, cep e bairro
-      # pn02: logradouro, numero e cep
-      # pn03: logradouro, numero e bairro
-      # pn04: logradouro e numero
-  # ei01: logradouro, numero, cep e bairro
-  # ei02: logradouro, numero e cep
-  # ei03: logradouro, numero e bairro
-  # ei04: logradouro e numero
-        # pi01: logradouro, numero, cep e bairro
-        # pi02: logradouro, numero e cep
-        # pi03: logradouro, numero e bairro
-        # pi04: logradouro e numero
-  # er01: logradouro, cep e bairro
-  # er02: logradouro e cep
-  # er03: logradouro e bairro
-  # er04: logradouro
-      # pr01: logradouro, cep e bairro
-      # pr02: logradouro e cep
-      # pr03: logradouro e bairro
-      # pr04: logradouro
-  # ec01: municipio, cep, localidade
-  # ec02: municipio, cep
-  # eb01: municipio, localidade
-  # em01: municipio

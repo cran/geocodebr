@@ -36,8 +36,7 @@
 #' categoria é nomeada a partir de um código de quatro caracteres:
 #'
 #' - o primeiro caracter, sempre `d` ou `p`, determina se a correspondência foi
-#' feita de forma determinística (`d`) ou probabilística (`p`) - a segunda opção
-#' ainda não foi implementada no pacote, mas é planejada em versões futuras;
+#' feita de forma determinística (`d`) ou probabilística (`p`);
 #' - o segundo faz menção à categoria de `precisao` na qual o resultado foi
 #' classificado (`n` para `"numero"`, `a` para `"numero_aproximado"`, `r` para
 #' `"logradouro"`, `c` para `"cep"`, `b` para `"localidade"` e `m` para `"municipio"`);
@@ -90,4 +89,13 @@
 #'
 #' Endereços não encontrados são retornados com latitude, longitude, precisão e
 #' tipo de resultado `NA`.
+#'
+#' # Busca probabilitisca
+#'
+#' Os tipos de resultado com busca probabilitisca usam como base o algoritmo de
+#' semelhança de Jaro para comparar as strings de 'logradouro' dos dados de
+#' input e da base de endereços do geocodebr. O pacote considera como match o
+#' logradouro da base de endereços que apresenta a maior semelhança de
+#' Jaro condicionado a uma semelhança mínima de `0.85`, e desde que também haja
+#' match determinístico em ao menos um dos campos "cep" e "localidade".
 #'

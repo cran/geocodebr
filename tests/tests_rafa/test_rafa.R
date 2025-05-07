@@ -19,36 +19,6 @@ if (!is.null(resp_header(response, "last-modified"))) {
 }
 
 
-#### cache tests
-
-system.time(
-  df <- read_families(year = 2000,
-                      showProgress = T,
-                      cache = T)
-)
-
-censobr_cache(delete_file = '2000_families')
-
-
-
-
-############3
-# dici cenus tract 1970
-# arquivo dos 80
-
-
-# devtools::install_github("ipeaGIT/r5r", subdir = "r-package", force=T)
-library(censobr)
-library(dplyr)
-library(arrow)
-library(data.table)
-
-
-
-df <- read_population(year = 2010, add_labels = 'pt') |>
-  filter(code_state == 11) |>
-  collect()
-
 
 library(censobr)
 library(dplyr)
@@ -112,7 +82,11 @@ interview_manual(year = 1970)
 
 
 
+# github actions ------------------------
 
+usethis::use_github_action("test-coverage")
+usethis::use_github_action("check-standard")
+usethis::use_github_action("pkgdown")
 
 # Coverage ------------------------
 # usethis::use_coverage()
@@ -129,6 +103,8 @@ t1 <- covr::function_coverage(fun=geocode, test_file("tests/testthat/test-geocod
 t1 <- covr::function_coverage(fun=definir_campos, test_file("tests/testthat/test-definir_campos.R"))
 t1 <- covr::function_coverage(fun=download_cnefe, test_file("tests/testthat/test-download_cnefe.R"))
 t1 <- covr::function_coverage(fun=listar_dados_cache, test_file("tests/testthat/test_cache.R"))
+t1 <- covr::function_coverage(fun=busca_por_cep, test_file("tests/testthat/test-busca_por_cep.R"))
+t1 <- covr::function_coverage(fun=geocodebr_message, test_file("tests/testthat/test-message.R"))
 
 t1
 
@@ -169,6 +145,9 @@ urlchecker::url_update()
 # CMD Check --------------------------------
 # Check package errors
 
+# linux ubuntu-clang for CRAN
+rhub::rhub_check(platforms = 'ubuntu-clang')
+
 # run only the tests
 Sys.setenv(NOT_CRAN = "true")
 testthat::test_local()
@@ -177,7 +156,7 @@ testthat::test_local()
 Sys.setenv(NOT_CRAN = "true")
 devtools::check(pkg = ".",  cran = FALSE, env_vars = c(NOT_CRAN = "true"))
 
-# detecat probla de cpu < 2
+# detecta problema de cpu < 2
 devtools::check(remote = TRUE, manual = TRUE)
 
 devtools::check(remote = TRUE, manual = TRUE, env_vars = c(NOT_CRAN = "false"))

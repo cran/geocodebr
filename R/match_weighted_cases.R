@@ -8,7 +8,7 @@ match_weighted_cases <- function( # nocov start
     resultado_completo){
 
   # get corresponding parquet table
-  table_name <- get_reference_table(key_cols, match_type)
+  table_name <- get_reference_table(match_type)
 
   # build path to local file
   path_to_parquet <- paste0(listar_pasta_cache(), "/", table_name, ".parquet")
@@ -79,10 +79,10 @@ match_weighted_cases <- function( # nocov start
     FROM {x}
     LEFT JOIN {y}
     ON {join_condition}
-    WHERE {cols_not_null} AND {y}.numero IS NOT NULL;"
+    WHERE {cols_not_null} AND {y}.numero IS NOT NULL AND lon IS NOT NULL;"
   )
 
-  DBI::dbExecute(con, query_match)
+  DBI::dbSendQueryArrow(con, query_match)
   # a <- DBI::dbReadTable(con, 'temp_db')
 
 
@@ -125,7 +125,7 @@ match_weighted_cases <- function( # nocov start
     )
   }
 
-  DBI::dbExecute(con, query_aggregate)
+  DBI::dbSendQueryArrow(con, query_aggregate)
   # b <- DBI::dbReadTable(con, 'output_db')
 
 

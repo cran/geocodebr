@@ -19,7 +19,226 @@ set.seed(42)
 #' t <- subset(rais_like, match_type=='case_09' & Addr_type==	'PointAddress')
 
 2+2
-stop()
+# stop()
+
+
+
+
+# cad unico --------------------------------------------------------------------
+sample_size <- 5000000
+
+cad_con <- ipeadatalake::ler_cadunico(
+  data = 202312,
+  tipo = 'familia',
+  as_data_frame = F,
+  colunas = c("co_familiar_fam", "co_uf", "cd_ibge_cadastro",
+              "no_localidade_fam", "no_tip_logradouro_fam",
+              "no_tit_logradouro_fam", "no_logradouro_fam",
+              "nu_logradouro_fam", "ds_complemento_fam",
+              "ds_complemento_adic_fam",
+              "nu_cep_logradouro_fam", "co_unidade_territorial_fam",
+              "no_unidade_territorial_fam", "co_local_domic_fam")
+  )
+
+# a <- tail(cad, n = 100) |> collect()
+
+# compose address fields
+cad <- cad_con |>
+  mutate(no_tip_logradouro_fam = ifelse(is.na(no_tip_logradouro_fam), '', no_tip_logradouro_fam),
+         no_tit_logradouro_fam = ifelse(is.na(no_tit_logradouro_fam), '', no_tit_logradouro_fam),
+         no_logradouro_fam = ifelse(is.na(no_logradouro_fam), '', no_logradouro_fam)
+         ) |>
+  mutate(abbrev_state = co_uf,
+          code_muni = cd_ibge_cadastro,
+          logradouro = paste(no_tip_logradouro_fam, no_tit_logradouro_fam, no_logradouro_fam),
+          numero = nu_logradouro_fam,
+          cep = nu_cep_logradouro_fam,
+          bairro = no_localidade_fam) |>
+  select(co_familiar_fam,
+         abbrev_state,
+         code_muni,
+         logradouro,
+         numero,
+         cep,
+         bairro) |>
+  dplyr::compute() |>
+  dplyr::slice_sample(n = sample_size) |> # sample 20K
+  dplyr::collect()
+
+
+# setDT(cad)
+#
+# cad[, logradouro := enderecobr::padronizar_logradouros(logradouro) ]
+# cad[, numero := enderecobr::padronizar_numeros(numero,formato = 'integer') ]
+# cad[, cep := enderecobr::padronizar_ceps(cep) ]
+# cad[, bairro := enderecobr::padronizar_bairros(bairro) ]
+# cad[, code_muni := enderecobr::padronizar_municipios(code_muni) ]
+# cad[, abbrev_state := enderecobr::padronizar_estados(abbrev_state, formato = 'sigla') ]
+
+
+cad$id <- 1:nrow(cad)
+
+fields_cad <- geocodebr::definir_campos(
+  logradouro = 'logradouro',
+  numero = 'numero',
+  cep = 'cep',
+  localidade = 'bairro',
+  municipio = 'code_muni',
+  estado = 'abbrev_state'
+)
+
+
+
+#' Cad completo 43 milhoes
+#'
+#' > rafa_drop
+#' process    real
+#' 23.9m     17m
+#' expression           min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     time
+#' determ_wth_matches 2.15h  2.15h  0.000129    73.7GB   0.0107     1    83      2.15h / 2,204,315 empates
+#' prob after all det 2.64h  2.64h  0.000105    67.4GB   0.0110     1   104      2.64h / 2,444,248 empates
+#' ideal seq          2.89h  2.89h 0.0000962    66.6GB   0.0123     1   128      2.89h / 2,296,752 empates
+#' 2nd best seq       2.98h  2.98h 0.0000934    67.1GB   0.0114     1   122      2.98h / 2,409,066 empates
+
+
+
+# sequencia de matches
+# 2nd best  1.18h    2296759
+# ideal seq 1.21h    2296827  empates
+# determ    46.06m   2204536
+
+# ℹ Geolocalizando endereços
+# Error in `duckdb_result()`:70,985/43,882,017 ■■■■■■■■■■■■■■■■■■■■■■            69% - Procurando pl02
+# ! rapi_execute: Failed to run query
+# Error: Out of Memory Error: Allocation failure
+# Run `rlang::last_trace()` to see where the error occurred.
+#
+
+
+
+# bench::mark( iterations = 1,
+ bench::system_time(
+  cadgeo <- geocodebr::geocode(
+    enderecos  = cad,
+    campos_endereco = fields_cad,
+    resultado_completo = T,
+    n_cores = 25, # 7
+    verboso = T,
+    resultado_sf = F,
+    resolver_empates = F
+    )
+)
+
+# 1 milhao
+# seque best 2.15m // 69723 empates
+# 2nd   best 2.1m // 72743 empates
+
+# 25 milhoes
+# seque best 49.4m // 1268668 empates
+# 2nd   best 42.9m // 1331655 empates
+
+
+# novo prob 4.44m // 66561 empates
+# antg prob 15.8m // 77189 empates
+
+# 1 milhao
+# expression   min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     EMPATES
+#        old 4.66m  4.66m   0.00358    1.82GB    0.200     1    56      4.66m <dt>   <Rprofmem> 70940 vs 70940
+#        new 7.33m  7.33m   0.00227    1.83GB    0.173     1    76      7.33m <dt>   <Rprofmem> 71402  vs 71390
+#   20250318 5.26m  5.26m   0.00317     1.8GB    0.181     1    57      5.26m <dt>   <Rprofmem> <bench_tm>
+#> com arrow unique
+
+#   20250319 5.53m  5.53m   0.00301    1.82GB    0.154     1    51      5.53m <dt>   <Rprofmem> 67285
+#> arrow unique + sendQuerryarrow
+
+#   20250320 5.98m  5.98m   0.00279    1.82GB    0.173     1    62      5.98m <dt>   <Rprofmem> 67409
+#> arrow unique + sendQuerryarrow e NO NUMBER nas cat 'pn'
+
+
+# 20250318 1.28h  1.28h  0.000217    1.83GB   0.0141     1    65      1.28h <dt>   <Rprofmem> <bench_tm> <tibble> 67608
+#> com duckdb unique
+
+# 3.61m  3.61m   0.00462    1.83GB    0.365     1    79      3.61m <dt>   <Rprofmem> // 69725
+# latest
+
+
+
+# 500K
+# expression   min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     EMPATES
+#       old 9.56m  9.56m   0.00174    1.02GB   0.0994     1    57      9.56m <dt>   <Rprofmem>  47,258
+#       new 1.99m  1.99m   0.00839    1000MB    0.327     1    39      1.99m <dt>   <Rprofmem>  41,317
+#  20250318 2.26m  2.26m   0.00736    1003MB    0.434     1    59      2.26m <dt>   <Rprofmem>
+
+#  20250321 2.24m  2.24m   0.00743    1015MB    0.320     1    43      2.24m <dt>   <Rprofmem> 41,841
+
+# latest distinct  1.55m  1.55m    0.0107    1022MB    0.569     1    53      1.55m <dt>   <Rprofmem> 43,146
+# latest filter    1.85m  1.85m   0.00903     910MB    0.361     1    40      1.85m <dt>   <Rprofmem> 43147
+
+#         distinct 1.84m  1.84m   0.00905     912MB    0.299     1    33      1.84m <dt>   <Rprofmem> 43129
+#         filter   1.90m   1.9m   0.00878     910MB    0.316     1    36       1.9m <dt>   <Rprofmem> 43153
+
+
+
+# 5 milhoes
+# expression   min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     EMPATES
+#            57.2m  57.2m  0.000292    7.84GB   0.0248     1    85      57.2m <dt>   <Rprofmem> 294,678
+
+
+
+# checando empates no cadunico -------------------------------------------------
+
+
+data.table::setDT(empate)
+
+empate <- filter(cadgeo, empate==T)
+empate <- empate[order(id)]
+empate[, count := .N, by = id]
+#  View(empate)
+
+table(empate$tipo_resultado) / nrow(empate) * 100
+
+
+
+d <- unique(empate$id)[1]
+
+temp <- empate |>
+  dplyr::filter(id == d ) #
+
+
+
+
+temp <- empate |>
+  dplyr::filter( tipo_resultado=='dn02') #
+
+d <- unique(temp$id)[6]
+
+temp <- temp |>
+  dplyr::filter(id == d ) #
+
+temp$tipo_resultado
+temp$endereco_encontrado
+
+
+mapview::mapview(temp, zcol='endereco_encontrado')
+
+sf::st_distance(temp)
+
+# nao era para ser empate
+# 5 "da02" "da02"   mesmo rua e cep
+# [1] "RUA PAULO SIMOES DA COSTA, 32 (aprox) - JARDIM ANGELA, SAO PAULO - SP, 04929-140"
+# [2] "RUA PAULO SIMOES DA COSTA, 32 (aprox) - ALTO DO RIVIERA, SAO PAULO - SP, 04929-140"
+
+
+
+
+
+
+
+
+
+
+
+
 # rais --------------------------------------------------------------------
 
 rais <- ipeadatalake::ler_rais(
@@ -52,7 +271,7 @@ data.table::setnames(
   rais,
   old = c('lat', 'lon'),
   new = c('lat_arcgis', 'lon_arcgis')
-  )
+)
 
 
 head(rais)
@@ -234,420 +453,6 @@ head(jp)
 
 subset(jp , logradouro_sem_numero %like% "DESEMBARGADOR SOUTO MAIOR")
 subset(t , logradouro_no_numbers %like% "DESEMBARGADOR SOUTO MAIOR")
-
-
-
-
-
-
-# cad unico --------------------------------------------------------------------
-sample_size <- 1000000
-
-cad_con <- ipeadatalake::ler_cadunico(
-  data = 202312,
-  tipo = 'familia',
-  as_data_frame = F,
-  colunas = c("co_familiar_fam", "co_uf", "cd_ibge_cadastro",
-              "no_localidade_fam", "no_tip_logradouro_fam",
-              "no_tit_logradouro_fam", "no_logradouro_fam",
-              "nu_logradouro_fam", "ds_complemento_fam",
-              "ds_complemento_adic_fam",
-              "nu_cep_logradouro_fam", "co_unidade_territorial_fam",
-              "no_unidade_territorial_fam", "co_local_domic_fam")
-  )
-
-# a <- tail(cad, n = 100) |> collect()
-
-# compose address fields
-cad <- cad_con |>
-  mutate(no_tip_logradouro_fam = ifelse(is.na(no_tip_logradouro_fam), '', no_tip_logradouro_fam),
-         no_tit_logradouro_fam = ifelse(is.na(no_tit_logradouro_fam), '', no_tit_logradouro_fam),
-         no_logradouro_fam = ifelse(is.na(no_logradouro_fam), '', no_logradouro_fam)
-         ) |>
-  mutate(abbrev_state = co_uf,
-          code_muni = cd_ibge_cadastro,
-          logradouro = paste(no_tip_logradouro_fam, no_tit_logradouro_fam, no_logradouro_fam),
-          numero = nu_logradouro_fam,
-          cep = nu_cep_logradouro_fam,
-          bairro = no_localidade_fam) |>
-  select(co_familiar_fam,
-         abbrev_state,
-         code_muni,
-         logradouro,
-         numero,
-         cep,
-         bairro) |>
-  dplyr::compute() |>
-#  dplyr::slice_sample(n = sample_size) |> # sample 20K
-  dplyr::collect()
-
-
-# setDT(cad)
-#
-# cad[, logradouro := enderecobr::padronizar_logradouros(logradouro) ]
-# cad[, numero := enderecobr::padronizar_numeros(numero,formato = 'integer') ]
-# cad[, cep := enderecobr::padronizar_ceps(cep) ]
-# cad[, bairro := enderecobr::padronizar_bairros(bairro) ]
-# cad[, code_muni := enderecobr::padronizar_municipios(code_muni) ]
-# cad[, abbrev_state := enderecobr::padronizar_estados(abbrev_state, formato = 'sigla') ]
-
-
-fields_cad <- geocodebr::definir_campos(
-  logradouro = 'logradouro',
-  numero = 'numero',
-  cep = 'cep',
-  localidade = 'bairro',
-  municipio = 'code_muni',
-  estado = 'abbrev_state'
-)
-
-
-
-# aprox. 465.13 soh a padronizacao dos enderecos
-
-dani_drop <- bench::system_time( daniF() )
-rafa_drop <- bench::system_time( rafaF() )
-dani_keep <- bench::system_time( daniT() )
-rafa_keep <- bench::system_time( rafaT() )
-
-#' Cad completo 43 milhoes
-#'
-#' > rafa_drop
-#' process    real
-#' 23.9m     17m
-#'
-#' > dani_drop
-#' process    real
-#' 49.9m   41.5m
-#'
-#' > rafa_keep
-#' process    real
-#' 1.33h   1.14h
-#'
-#' > dani_keep
-#' process    real
-#' 3.75h   3.53h
-#'
-#'
-#' different order
-#'
-#' > dani_drop
-#' process    real
-#' 27.2m     20m
-#' > rafa_drop
-#' process    real
-#' 38m   31.4m
-#' > dani_keep
-#' process    real
-#' 2.15h   1.95h
-#' > rafa_keep
-#' process    real
-#' 1.65h   1.43h
-
-
-
-
-
-
-
-rafaF <- function(){ message('rafa F')
-  message(Sys.time())
-  cadgeo <- geocodebr::geocode(
-    enderecos  = cad,
-    campos_endereco = fields_cad,
-    resultado_completo = T,
-    n_cores = 10, # 7
-    verboso = T,
-    resultado_sf = F
-  )
-  message(Sys.time())
-  }
-
-rafaT_db <- function(){ message('rafa Tdb')
-  message(Sys.time())
-  df_rafaT <- geocodebr:::geocode_db(
-    addresses_table = cad,
-    address_fields = fields_cad,
-    n_cores = 10, # 7
-    full_results = T,
-    progress = T
-  )
-  message(Sys.time())
-  return(2+2)
-  }
-
-
-rafaT <- function(){ message('rafa T')
-  message(Sys.time())
-  df_rafaT <- geocodebr::geocode(
-    addresses_table = cad,
-    address_fields = fields_cad,
-    n_cores = 10, # 7
-    full_results = T,
-    progress = T
-  )
-  message(Sys.time())
-  return(2+2)
-  }
-
-daniT <- function(){ message('dani')
-  message(Sys.time())
-  df_dani <- geocodebr:::geocode_dani_arrow(
-    addresses_table = cad,
-    address_fields = fields_cad,
-    n_cores = 10,
-    full_results = T,
-    progress = T
-  )
-  message(Sys.time())
-  return(2+2)
-  }
-
-daniF <- function(){ message('dani')
-  message(Sys.time())
-  df_dani <- geocodebr:::geocode_dani_arrow(
-    addresses_table = cad,
-    address_fields = fields_cad,
-    n_cores = 10,
-    full_results = F,
-    progress = T
-  )
-  message(Sys.time())
-  return(2+2)
-  }
-
-
-mb <- microbenchmark::microbenchmark(
-  rafa_drop = rafaF(),
-  dani_drop = daniF(),
-  rafa_keep = rafaT(),
-  dani_keep = daniT(),
-  times  = 5
-)
-mb
-
-# 1 milhao
-# Unit: seconds
-#      expr      min       lq     mean   median       uq       max neval
-# rafa_drop 50.85587 55.34562 61.64810 64.91925 66.52224  72.02584     7
-# dani_drop 54.41805 62.13952 66.75066 70.87897 72.21215  73.25427     7
-# rafa_keep 69.52835 80.53112 84.74141 86.21455 90.50629  95.37216     7
-# dani_keep 58.81924 92.98845 92.09274 98.03399 99.34149 103.13606     7
-
-
-# 2 milhoes
-# Unit: seconds
-#         expr       min       lq     mean   median       uq      max neval
-#    rafa_drop  84.26620 120.0313 122.3185 128.3564 137.3465 141.5922     5
-# rafa_drop_db  89.38189 137.4068 129.3111 137.6787 139.9067 142.1813     5
-#    rafa_keep 124.30968 136.2430 162.0449 169.5411 182.9881 197.1427     5
-# rafa_keep_db 179.03518 199.3445 198.3949 203.8696 204.8223 204.9028     5
-#   dani_arrow  92.18470 171.5269 187.1974 208.0572 230.0147 234.2035     5
-
-# 2 milhoes
-# Unit: seconds
-#         expr      min       lq     mean   median       uq      max neval
-#    rafa_keep 114.4084 191.8142 199.0075 219.0545 222.9719 230.0172     7
-# rafa_keep_db 201.9937 214.5410 215.6669 215.3243 218.1688 226.9311     7
-#   dani_arrow 139.4406 185.4723 201.8943 220.1483 227.4886 227.7493     7
-
-# 5 milhoes
-#
-# Unit: seconds
-#         expr      min       lq     mean   median       uq       max neval
-#    rafa_keep 647.4232 866.5022 830.6406 873.0242 882.0129  884.2402     5
-# rafa_keep_db 665.9604 687.3503 821.7426 811.2217 884.4367 1059.7439     5
-#   dani_arrow 368.1275 527.4584 640.7033 600.2513 829.0065  878.6727     5
-
-
-bm <- bench::mark(
-  rafa_keep = rafaT(),
-  dani_keep = daniT(),
-  check = F,
-  iterations  = 5
-)
-bm
-
-
-
-#' take-aways:
-#' manter ou dropar matched_address faz boa diferenca de tempo, mas nao de memoria
-#'
-
-n_rounds <- 1
-
-# 517.55
-bm_dani_arrow <- bench::mark(
-  df_dani_arrow = daniF(),
-  check = F,
-  iterations  = n_rounds
-)
-bm_dani_arrow
-
-
-bm_rafa_drop <- bench::mark(
-  rafa_drop = rafaF(),
-  check = F,
-  iterations  = n_rounds
-)
-bm_rafa_drop
-
-
-
-bm_rafa_keep_db <- bench::mark(
-  rafa_keep_db = rafaT_db(),
-  check = F,
-  iterations  = n_rounds
-)
-bm_rafa_keep_db
-
-
-# bm_rafa_keep 28 min
-bm_rafa_keep <- bench::mark(
-  rafa_keep = rafaT(),
-  check = F,
-  iterations  = n_rounds
-)
-bm_rafa_keep
-
-
-
-
-
-time_dani1 <- system.time( df_dani_arrow <- daniT() ) # 22.85667
-time_dani2 <- system.time( df_dani_arrow <- daniT() ) # 30.45833
-time_dani3 <- system.time( df_dani_arrow <- daniT() ) # 40.58983
-time_dani4 <- system.time( df_dani_arrow <- daniT() ) #
-time_dani5 <- system.time( df_dani_arrow <- daniT() ) #
-time_rafa_keep1 <- system.time( rafa_keep <- rafaT() ) # 33.182
-time_rafa_keep2 <- system.time( rafa_keep <- rafaT() ) # 31.47183
-time_rafa_keep3 <- system.time( rafa_keep <- rafaT() ) # 34.2515
-time_rafa_keep4 <- system.time( rafa_keep <- rafaT() ) # 34.2515
-time_rafa_keep5 <- system.time( rafa_keep <- rafaT() ) # 34.2515
-time_rafa_keep_db1 <- system.time( rafa_keep_db <- rafaT_db() )
-time_rafa_keep_db2 <- system.time( rafa_keep_db <- rafaT_db() )
-time_rafa_keep_db3 <- system.time( rafa_keep_db <- rafaT_db() )
-time_rafa_keep_db4 <- system.time( rafa_keep_db <- rafaT_db() )
-time_rafa_keep_db5 <- system.time( rafa_keep_db <- rafaT_db() )
-
-
-time_dani1
-time_dani2
-time_dani3
-time_dani4
-time_dani5
-time_rafa_keep1
-time_rafa_keep2
-time_rafa_keep3
-time_rafa_keep4
-time_rafa_keep5
-time_rafa_keep_db1
-time_rafa_keep_db2
-time_rafa_keep_db3
-time_rafa_keep_db4
-time_rafa_keep_db5
-
-bm <- bench::mark(
-  rafa_drop = rafaF(),
-  dani_drop = daniF(),
-  rafa_keep = rafaT(),
-  dani_keep = daniT(),
-  check = F,
-  iterations  = 1
-)
-bm
-
-# 500 K
-#     expression     min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     time
-#     <bch:expr> <bch:t> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list> <list>     <list>
-#   1 rafa_drop       NA     NA   NA          398MB  NA          2     5         NA <NULL> <Rprofmem> <bench_tm>
-#   2 dani_drop   56.89s 56.89s    0.0176     370MB   0.0352     1     2     56.89s <NULL> <Rprofmem> <bench_tm>
-#   3 rafa_keep    1.42m  1.42m    0.0118     401MB   0.0471     1     4      1.42m <NULL> <Rprofmem> <bench_tm>
-#   4 dani_keep    1.35m  1.35m    0.0123     374MB   0.0494     1     4      1.35m <NULL> <Rprofmem> <bench_tm>
-
-
-
-
-# # time_dani1
-#    user  system elapsed
-#  626.68   86.05  426.64
-# 1115.14   89.67  912.00
-# 1695.93   92.47 1355.42
-# 2280.67   93.33 1900.61
-# 2255.89   82.97 1770.97
-#
-# # time_rafa_keep1
-#    user  system elapsed
-# 2060.17   79.46 1657.95
-# 2122.66   78.86 1623.79
-# 2094.00   78.81 1692.17
-# 2131.64   79.25 1703.75
-# 2088.01   81.00 1741.21
-#
-# # time_rafa_keep_db1
-#    user  system elapsed
-# 2285.82   76.58 1862.69
-# 2142.54   74.02 1831.28
-# 2250.08   76.30 1844.20
-# 2379.26   73.30 1917.16
-# 2591.64   80.29 2226.95
-
-
-
-
-
-
-
-
-
-
-
-
-gc()
-
-bm <- bench::mark(
-  # rafa_keep = rafaT(),
-  # dani_keep = daniT(),
-  rafa_keep_db = rafaT_db(),
-  check = F,
-  iterations  = 5
-)
-bm
-
-
-
-# 1 milhao 66666666666
-#   expression     min  median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     time
-#   <bch:expr>   <bch>  <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list> <list>     <list>
-# 1 rafa_keep    56.04s  1.06m    0.0160     889MB   0.0959     5    30      5.21m <NULL> <Rprofmem> <bench_tm>
-# 1 rafa_keep_db 1.07m   1.19m    0.0141     897MB   0.102      5    36      5.9m <NULL> <Rprofmem> <bench_tm>
-# 1 dani_keep    1.05m   1.3m     0.0133     807MB   0.0716     5    27      6.28m <NULL> <Rprofmem> <bench_tm>
-
-# 1 rafa_keep        1m  1.22m    0.0138     889MB    0.105     5    38      6.04m <NULL>
-# 1 rafa_keep_db  1.03m  1.30m    0.0134     847MB   0.0914     5    34      6.2m <NULL>
-# 1 dani_keep     59.9s  1.31m    0.0130     807MB   0.0860     5    33      6.4m <NULL>
-
-
-# 5 milhoes  66666666666
-#   expression     min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     time
-#   <bch:expr> <bch:t> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list> <list>     <list>
-# 1 rafa_keep    4.95m  7.41m   0.00233    4.37GB   0.0168     5    36      35.8m <NULL> <Rprofmem> <bench_tm>
-# 1 rafa_keep_db 5.48m  8.40m   0.00208    4.45GB   0.0145     5    35      40.1m <NULL> <Rprofmem>
-# 1 dani_keep    6.64m  10.3m   0.00158    4.03GB   0.0107     5    34      52.7m <NULL> <Rprofmem>
-
-
-
-# 20 mihoes 666666666
-#     expression      min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result
-#     <bch:expr>  <bch:t> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list>
-#   1 rafa_keep     20.6m  33.3m  0.000523    17.2GB  0.00324     5    31      2.66h <NULL>
-#   1 rafa_keep_db  22.7m  36.6m  0.000464    17.5GB  0.00288     5    31         3h <NULL>
-#   1 dani_keep     40.9m  1.14h  0.000242    15.8GB  0.00145     5    30      5.75h <NULL>
-
-
-
-
-
 
 
 

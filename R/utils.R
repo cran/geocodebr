@@ -96,13 +96,11 @@ add_precision_col <- function(con, update_tb = NULL){
   # update_tb = "output_db"
 
   # add empty column
-  DBI::dbExecute(
-    con,
-    glue::glue("ALTER TABLE {update_tb} ADD COLUMN precisao TEXT;")
-  )
+  query_add_col <- glue::glue("ALTER TABLE {update_tb} ADD COLUMN precisao TEXT;")
+  DBI::dbSendQueryArrow(con, query_add_col)
 
   # populate column
-  query_precision <- glue::glue("
+  query_precision_cats <- glue::glue("
   UPDATE {update_tb}
   SET precisao = CASE
   WHEN tipo_resultado IN ('dn01', 'dn02', 'dn03', 'dn04',
@@ -117,7 +115,9 @@ add_precision_col <- function(con, update_tb = NULL){
   ELSE NULL
   END;")
 
-  DBI::dbExecute( con, query_precision )
+
+  # DBI::dbExecute(con, query_precision_cats )
+  DBI::dbSendQueryArrow(con, query_precision_cats )
 }
 
 
@@ -132,12 +132,23 @@ merge_results <- function(con,
                           resultado_completo){
 
 
-  select_columns_y <- c('lat', 'lon', 'tipo_resultado', 'precisao', 'endereco_encontrado', 'contagem_cnefe')
+  select_columns_y <- c('lat', 'lon', 'tipo_resultado', 'precisao',
+                        'endereco_encontrado', 'logradouro_encontrado', 'contagem_cnefe')
 
   if (isTRUE(resultado_completo)) {
-  select_columns_y <- c(select_columns_y, 'numero_encontrado' , 'cep_encontrado',
-                        'localidade_encontrada', 'municipio_encontrado' , 'estado_encontrado' # , 'similaridade_logradouro'
+
+    # select additional columns to output
+    select_columns_y <- c(select_columns_y, 'numero_encontrado' , 'cep_encontrado',
+                          'localidade_encontrada', 'municipio_encontrado' ,
+                          'estado_encontrado', 'similaridade_logradouro')
+
+    # relace NULL similaridade_logradouro as 1 because they were found deterministically
+    DBI::dbSendQueryArrow(
+      con,
+      "UPDATE output_db
+      SET similaridade_logradouro = COALESCE(similaridade_logradouro, 1);"
     )
+
   }
 
   # Create the SELECT clause dynamically
@@ -199,48 +210,67 @@ create_index <- function(con, tb, cols, operation, overwrite=TRUE){
 
 
 
-get_key_cols <- function(case) {
-  relevant_cols <- if (case %in% c('dn01', 'da01', 'pn01', 'pa01') ) {
+get_key_cols <- function(match_type) {
+  relevant_cols <- if (match_type %in% c('dn01', 'da01', 'pn01', 'pa01') ) {
     c("estado", "municipio", "logradouro", "numero", "cep", "localidade")
-  } else if (case %in% c('dn02', 'da02', 'pn02', 'pa02')) {
+  } else if (match_type %in% c('dn02', 'da02', 'pn02', 'pa02')) {
     c("estado", "municipio", "logradouro", "numero", "cep")
-  } else if (case %in% c('dn03', 'da03', 'pn03', 'pa03')) {
+  } else if (match_type %in% c('dn03', 'da03', 'pn03', 'pa03')) {
     c("estado", "municipio", "logradouro", "numero", "localidade")
-  } else if (case %in% c('dn04', 'da04', 'pn04', 'pa04')) {
+  } else if (match_type %in% c('dn04', 'da04', 'pn04', 'pa04')) {
     c("estado", "municipio", "logradouro", "numero")
-  } else if (case %in% c('dl01', 'pl01')) {
+  } else if (match_type %in% c('dl01', 'pl01')) {
     c("estado", "municipio", "logradouro", "cep", "localidade")
-  } else if (case %in% c('dl02', 'pl02')) {
+  } else if (match_type %in% c('dl02', 'pl02')) {
     c("estado", "municipio", "logradouro", "cep")
-  } else if (case %in% c('dl03', 'pl03')) {
+  } else if (match_type %in% c('dl03', 'pl03')) {
     c("estado", "municipio", "logradouro", "localidade")
-  } else if (case %in% c('dl04', 'pl04')) {
+  } else if (match_type %in% c('dl04', 'pl04')) {
     c("estado", "municipio", "logradouro")
-  } else if (case == 'dc01') {
+  } else if (match_type == 'dc01') {
     c("estado", "municipio", "cep", "localidade")
-  } else if (case == 'dc02') {
+  } else if (match_type == 'dc02') {
     c("estado", "municipio", "cep")
-  } else if (case == 'db01') {
+  } else if (match_type == 'db01') {
     c("estado", "municipio", "localidade")
-  } else if (case == 'dm01') {
+  } else if (match_type == 'dm01') {
     c("estado", "municipio")
   }
 
   return(relevant_cols)
 }
 
-
+### ideal sequence of match types
 all_possible_match_types <- c(
-  "dn01", "da01", # "pn01", "pa01",
-  "dn02", "da02", # "pn02", "pa02",
-  "dn03", "da03", # "pn03", "pa03",
-  "dn04", "da04", # #"pn04", "pa04", # too costly
-  "dl01",         # "pl01",
-  "dl02",         # "pl02",
-  "dl03",         # "pl03",
-  "dl04",         # # pl04",  # too costly
+  "dn01", "da01", "pn01", "pa01",
+  "dn02", "da02", "pn02", "pa02",
+  "dn03", "da03", "pn03", "pa03",
+  "dn04", "da04", #"pn04", "pa04", # too costly
+  "dl01",         "pl01",
+  "dl02",         "pl02",
+  "dl03",         "pl03",
+  "dl04",         # pl04",  # too costly
   "dc01", "dc02", "db01", "dm01"
 )
+
+# ### 2nd best viable sequence of match types for really large datasets ? testando com cadunico
+# all_possible_match_types <- c(
+#   "dn01", "da01",
+#   "dn02", "da02",
+#   "dn03", "da03",
+#   "dn04", "da04",
+#   "pn01", "pa01", "pn02", "pa02", "pn03", "pa03", #"pn04", "pa04", # too costly
+#   "dl01",         "pl01",
+#   "dl02",         "pl02",
+#   "dl03",         "pl03",
+#   "dl04",         # pl04",  # too costly
+#   "dc01", "dc02", "db01", "dm01"
+# )
+
+
+
+
+
 
 number_exact_types <- c(
   "dn01", "dn02", "dn03", "dn04"
@@ -308,24 +338,12 @@ assert_and_assign_address_fields <- function(address_fields, addresses_table) {
 }
 
 
-# calculate distances between pairs of coodinates
-dt_haversine <- function(lat_from, lon_from, lat_to, lon_to, r = 6378137){
-  radians <- pi/180
-  lat_to <- lat_to * radians
-  lat_from <- lat_from * radians
-  lon_to <- lon_to * radians
-  lon_from <- lon_from * radians
-  dLat <- (lat_to - lat_from)
-  dLon <- (lon_to - lon_from)
-  a <- (sin(dLat/2)^2) + (cos(lat_from) * cos(lat_to)) * (sin(dLon/2)^2)
-  return(2 * atan2(sqrt(a), sqrt(1 - a)) * r)
-}
 
-
-
-get_reference_table <- function(key_cols, match_type){
+get_reference_table <- function(match_type){
 
   # key_cols = get_key_cols('da03')
+
+  key_cols <- get_key_cols(match_type)
 
   # read corresponding parquet file
   table_name <- paste(key_cols, collapse = "_")
@@ -349,4 +367,21 @@ get_reference_table <- function(key_cols, match_type){
   }
 
   return(table_name)
+  }
+
+
+# min cutoff for string match
+# min cutoff for probabilistic string match of logradouros
+get_prob_match_cutoff <- function(match_type){
+  min_cutoff <- ifelse(match_type %in% c('pn01', 'pa01', 'pl01'), 0.85,  0.9)
+  return(min_cutoff)
+  }
+
+
+
+# create a dummy function that uses nanoarrow with no effect
+# nanoarrow is only used internally in DBI::dbWriteTableArrow()
+# however, if we do not put this dummy function here, CRAN check flags an error
+dummy <- function() {
+  nanoarrow::as_nanoarrow_schema
   }
