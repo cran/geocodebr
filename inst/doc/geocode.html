@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2025-05-07" />
+<meta name="date" content="2025-07-07" />
 
 <title>Geocode</title>
 
@@ -49,6 +49,7 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -338,7 +339,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">Geocode</h1>
-<h4 class="date">2025-05-07</h4>
+<h4 class="date">2025-07-07</h4>
 
 
 
@@ -396,8 +397,50 @@ entanto, são salvos de forma persistente, logo eles são baixados uma
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">resultado_sf =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">verboso =</span> <span class="cn">FALSE</span></span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  )</span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="fu">head</span>(ends_geo)</span></code></pre></div>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; Warning in max(contagem_cnefe, na.rm = TRUE): no non-missing arguments to max;</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; returning -Inf</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="fu">head</span>(ends_geo)</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;       id            nm_logradouro Numero       Cep               Bairro</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt;    &lt;int&gt;                   &lt;char&gt;  &lt;int&gt;    &lt;char&gt;               &lt;char&gt;</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; 1:     1 Rua Maria Lucia Pacifico     17 26042-730           Santa Rita</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; 2:     2      Rua Leopoldina Tome     46 25030-050           Centenario</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt; 3:     3          Rua Dona Judite      0 23915-700          Caputera II</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; 4:     4     Rua Alexandre Amaral      0 23098-120           Santissimo</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt; 5:     5                Avenida E    300 23860-000         Praia Grande</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt; 6:     6      Rua Princesa Isabel    263           Estacao Experimental</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt;       nm_municipio code_muni  nm_uf        lat       lon tipo_resultado</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt;             &lt;char&gt;     &lt;int&gt; &lt;char&gt;      &lt;num&gt;     &lt;num&gt;         &lt;char&gt;</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="co">#&gt; 1:     Nova Iguacu   3303500     RJ -22.695496 -43.47118           dn01</span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="co">#&gt; 2: Duque de Caxias   3301702     RJ -22.779173 -43.31134           dn01</span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="co">#&gt; 3:  Angra dos Reis   3300100     RJ -22.978837 -44.20848           dl01</span></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="co">#&gt; 4:  Rio de Janeiro   3304557     RJ -22.868992 -43.51150           dl01</span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="co">#&gt; 5:     Mangaratiba   3302601     RJ -22.929864 -43.97214           dn01</span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="co">#&gt; 6:      Rio Branco   1200401     AC  -9.963436 -67.83559           dn03</span></span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="co">#&gt;      precisao</span></span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="co">#&gt;        &lt;char&gt;</span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="co">#&gt; 1:     numero</span></span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt; 2:     numero</span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt; 3: logradouro</span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt; 4: logradouro</span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="co">#&gt; 5:     numero</span></span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="co">#&gt; 6:     numero</span></span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="co">#&gt;                                                            endereco_encontrado</span></span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="co">#&gt;                                                                         &lt;char&gt;</span></span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="co">#&gt; 1:      RUA MARIA LUCIA PACIFICO, 17 - SANTA RITA, NOVA IGUACU - RJ, 26042-730</span></span>
+<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="co">#&gt; 2:       RUA LEOPOLDINA TOME, 46 - CENTENARIO, DUQUE DE CAXIAS - RJ, 25030-050</span></span>
+<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a><span class="co">#&gt; 3:               RUA DONA JUDITE - CAPUTERA II, ANGRA DOS REIS - RJ, 23915-700</span></span>
+<span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a><span class="co">#&gt; 4:           RUA ALEXANDRE AMARAL - SANTISSIMO, RIO DE JANEIRO - RJ, 23098-120</span></span>
+<span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a><span class="co">#&gt; 5:                  AVENIDA E, 300 - PRAIA GRANDE, MANGARATIBA - RJ, 23860-000</span></span>
+<span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a><span class="co">#&gt; 6: RUA PRINCESA ISABEL, 263 - ESTACAO EXPERIMENTAL, RIO BRANCO - AC, 69921-026</span></span>
+<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a><span class="co">#&gt;    empate</span></span>
+<span id="cb2-47"><a href="#cb2-47" tabindex="-1"></a><span class="co">#&gt;    &lt;lgcl&gt;</span></span>
+<span id="cb2-48"><a href="#cb2-48" tabindex="-1"></a><span class="co">#&gt; 1:  FALSE</span></span>
+<span id="cb2-49"><a href="#cb2-49" tabindex="-1"></a><span class="co">#&gt; 2:  FALSE</span></span>
+<span id="cb2-50"><a href="#cb2-50" tabindex="-1"></a><span class="co">#&gt; 3:  FALSE</span></span>
+<span id="cb2-51"><a href="#cb2-51" tabindex="-1"></a><span class="co">#&gt; 4:  FALSE</span></span>
+<span id="cb2-52"><a href="#cb2-52" tabindex="-1"></a><span class="co">#&gt; 5:  FALSE</span></span>
+<span id="cb2-53"><a href="#cb2-53" tabindex="-1"></a><span class="co">#&gt; 6:  FALSE</span></span></code></pre></div>
 <p>Por padrão, a tabela de <em>output</em> é igual à tabela de input do
 usuário acrescida de colunas com a latitude e longitude encontradas, bem
 como de colunas indicando o nível de precisão dos resultados e o

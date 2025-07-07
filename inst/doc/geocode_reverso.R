@@ -10,23 +10,23 @@ knitr::opts_chunk$set(
 Sys.setenv(OMP_THREAD_LIMIT = 2)
 
 ## -----------------------------------------------------------------------------
-# library(geocodebr)
-# library(sf)
-# 
-# # amostra de pontos espaciais
-# pontos <- readRDS(
-#   system.file("extdata/pontos.rds", package = "geocodebr")
-# )
-# 
-# pontos <- pontos[1:20,]
-# 
-# # geocode reverso
-# df_enderecos <- geocodebr::geocode_reverso(
-#   pontos = pontos,
-#   dist_max = 1000,
-#   verboso = FALSE,
-#   n_cores = 1
-# )
-# 
-# head(df_enderecos)
+library(geocodebr)
+library(sf)
+
+# amostra de pontos espaciais
+pontos <- readRDS(
+  system.file("extdata/pontos.rds", package = "geocodebr")
+)
+
+pontos <- pontos[1:20,]
+
+# geocode reverso
+df_enderecos <- geocodebr::geocode_reverso(
+  pontos = pontos,
+  dist_max = 1000,
+  verboso = FALSE,
+  n_cores = 1
+)
+
+head(df_enderecos)
 

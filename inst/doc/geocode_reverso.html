@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2025-05-07" />
+<meta name="date" content="2025-07-07" />
 
 <title>Geocode reverso</title>
 
@@ -49,6 +49,7 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -338,7 +339,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">Geocode reverso</h1>
-<h4 class="date">2025-05-07</h4>
+<h4 class="date">2025-07-07</h4>
 
 
 
@@ -357,23 +358,41 @@ indica a distância entre coordenadas originais e os endereços
 encontrados.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(geocodebr)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co"># amostra de pontos espaciais</span></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>pontos <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="fu">system.file</span>(<span class="st">&quot;extdata/pontos.rds&quot;</span>, <span class="at">package =</span> <span class="st">&quot;geocodebr&quot;</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>)</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>pontos <span class="ot">&lt;-</span> pontos[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,]</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co"># geocode reverso</span></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>df_enderecos <span class="ot">&lt;-</span> geocodebr<span class="sc">::</span><span class="fu">geocode_reverso</span>(</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>  <span class="at">pontos =</span> pontos,</span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  <span class="at">dist_max =</span> <span class="dv">1000</span>,</span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>  <span class="at">verboso =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>  <span class="at">n_cores =</span> <span class="dv">1</span></span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>)</span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a><span class="fu">head</span>(df_enderecos)</span></code></pre></div>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&gt; Linking to GEOS 3.13.0, GDAL 3.10.1, PROJ 9.5.1; sf_use_s2() is TRUE</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co"># amostra de pontos espaciais</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>pontos <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="fu">system.file</span>(<span class="st">&quot;extdata/pontos.rds&quot;</span>, <span class="at">package =</span> <span class="st">&quot;geocodebr&quot;</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>pontos <span class="ot">&lt;-</span> pontos[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,]</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co"># geocode reverso</span></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>df_enderecos <span class="ot">&lt;-</span> geocodebr<span class="sc">::</span><span class="fu">geocode_reverso</span>(</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  <span class="at">pontos =</span> pontos,</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>  <span class="at">dist_max =</span> <span class="dv">1000</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>  <span class="at">verboso =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>  <span class="at">n_cores =</span> <span class="dv">1</span></span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>)</span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a><span class="fu">head</span>(df_enderecos)</span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a><span class="co">#&gt; Simple feature collection with 3 features and 11 fields</span></span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="co">#&gt; Geometry type: POINT</span></span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a><span class="co">#&gt; Dimension:     XY</span></span>
+<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a><span class="co">#&gt; Bounding box:  xmin: -51.49634 ymin: -19.29416 xmax: -39.92601 ymax: 0.3649148</span></span>
+<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a><span class="co">#&gt; Geodetic CRS:  SIRGAS 2000</span></span>
+<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a><span class="co">#&gt;   id                                               endereco_completo estado</span></span>
+<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co">#&gt; 1  1         CORREGO BOA VISTA, 32 - LAJINHA, PANCAS - ES, 29750-000     ES</span></span>
+<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a><span class="co">#&gt; 2 11           RODOVIA ES 381, 6 - KM 13, SAO MATEUS - ES, 29944-025     ES</span></span>
+<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="co">#&gt; 3 17 RAMAL MATAO DO PIACACA 1, 14 - PIACACA, SANTANA - AP, 68925-001     AP</span></span>
+<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a><span class="co">#&gt;    municipio               logradouro numero       cep localidade  lat_cnefe</span></span>
+<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="co">#&gt; 1     PANCAS        CORREGO BOA VISTA     32 29750-000    LAJINHA -19.291122</span></span>
+<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a><span class="co">#&gt; 2 SAO MATEUS           RODOVIA ES 381      6 29944-025      KM 13 -18.689982</span></span>
+<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a><span class="co">#&gt; 3    SANTANA RAMAL MATAO DO PIACACA 1     14 68925-001    PIACACA   0.361638</span></span>
+<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a><span class="co">#&gt;   lon_cnefe distancia_metros                    geometry</span></span>
+<span id="cb1-35"><a href="#cb1-35" tabindex="-1"></a><span class="co">#&gt; 1 -40.73766         560.6493  POINT (-40.7334 -19.29416)</span></span>
+<span id="cb1-36"><a href="#cb1-36" tabindex="-1"></a><span class="co">#&gt; 2 -39.92413         225.5553 POINT (-39.92601 -18.69095)</span></span>
+<span id="cb1-37"><a href="#cb1-37" tabindex="-1"></a><span class="co">#&gt; 3 -51.49637         364.7801 POINT (-51.49634 0.3649148)</span></span></code></pre></div>
 <p>Por padrão, a função busca pelo endereço mais próximo num raio
 aproximado de 1000 metros. No entanto, o usuário pode ajustar esse valor
 usando o parâmetro <code>dist_max</code> para definir a distância máxima

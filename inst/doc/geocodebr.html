@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2025-05-07" />
+<meta name="date" content="2025-07-07" />
 
 <title>Introdução ao geocodebr</title>
 
@@ -49,6 +49,7 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -338,7 +339,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">Introdução ao geocodebr</h1>
-<h4 class="date">2025-05-07</h4>
+<h4 class="date">2025-07-07</h4>
 
 
 
@@ -408,7 +409,11 @@ encontrar as coordenadas geográficas dos endereços de input.</li>
 <span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>  <span class="at">verboso =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>  <span class="at">cache =</span> <span class="cn">TRUE</span>,</span>
 <span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>  <span class="at">n_cores =</span> <span class="dv">1</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>)</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; Warning: Foram encontrados 1 casos de empate. Estes casos foram marcados com valor</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt; `TRUE` na coluna &#39;empate&#39;, e podem ser inspecionados na coluna</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt; &#39;endereco_encontrado&#39;. Alternativamente, use `resolver_empates = TRUE` para que</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; o pacote lide com os empates automaticamente. Ver documentação da função.</span></span></code></pre></div>
 <p><strong>Nota:</strong> A função <code>geocode()</code> requer que os
 dados do CNEFE estejam armazenados localmente. A primeita vez que a
 função é executada, ela baixa os dados do CNEFE e salva em um cache
@@ -483,8 +488,17 @@ dentro dela.</li>
 <p>Após rodar o código desta <em>vignette</em>, é provável que o seu
 <em>cache</em> esteja configurado como a seguir:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>geocodebr<span class="sc">::</span><span class="fu">listar_pasta_cache</span>()</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>geocodebr<span class="sc">::</span><span class="fu">listar_dados_cache</span>()</span></code></pre></div>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; [1] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>geocodebr<span class="sc">::</span><span class="fu">listar_dados_cache</span>()</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio.parquet&quot;                                 </span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; [2] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_cep.parquet&quot;                             </span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; [3] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_cep_localidade.parquet&quot;                  </span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; [4] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_localidade.parquet&quot;                      </span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; [5] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_logradouro_cep_localidade.parquet&quot;       </span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; [6] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_logradouro_localidade.parquet&quot;           </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; [7] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_logradouro_numero_cep_localidade.parquet&quot;</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [8] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_logradouro_numero_localidade.parquet&quot;</span></span></code></pre></div>
 </div>
 
 
