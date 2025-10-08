@@ -48,18 +48,30 @@ download_cnefe <- function(tabela = "todas", verboso = TRUE, cache = TRUE) {
     all_files <- paste0(all_files, ".parquet")
   }
 
-
   data_urls <- glue::glue(
     "https://github.com/ipeaGIT/padronizacao_cnefe/releases/",
     "download/{data_release}/{all_files}"
   )
 
+  # create dir with data release inside the cache dir / dir is versioned
   if (!cache) {
-    data_dir <- as.character(fs::path_norm(tempfile("standardized_cnefe")))
+    cache_dir <- as.character(fs::path_norm(tempfile("geocodebr_temp")))
+    data_dir <- glue::glue("{cache_dir}/geocodebr_data_release_{data_release}")
+    if (!dir.exists(data_dir)) {
+      fs::dir_create(data_dir, recurse = TRUE)
+    }
+
   } else {
-    data_dir <- listar_pasta_cache()
+    # apaga release antigo se houver
+    apaga_data_release_antigo()
+
+    cache_dir <- geocodebr::listar_pasta_cache()
+    data_dir <- glue::glue("{cache_dir}/geocodebr_data_release_{data_release}")
+    if (!dir.exists(data_dir)) {
+      fs::dir_create(data_dir, recurse = TRUE)
+    }
   }
-  fs::dir_create(data_dir)
+
 
   # we only need to download data that hasn't been downloaded yet. note that if
   # cache=FALSE data_dir is always empty, so we download all required data
@@ -73,7 +85,7 @@ download_cnefe <- function(tabela = "todas", verboso = TRUE, cache = TRUE) {
 
     if (verboso) { message_usando_cnefe_local() }
 
-    return(invisible(data_dir))
+    return(invisible(cache_dir))
     }
 
   downloaded_files <- download_files(data_dir, files_to_download, verboso)
@@ -85,11 +97,12 @@ download_cnefe <- function(tabela = "todas", verboso = TRUE, cache = TRUE) {
 
   download_dir <- unique(fs::path_dir(downloaded_files))
 
-  return(invisible(download_dir))
+  return(invisible(cache_dir))
 }
 
 
 download_files <- function(data_dir, files_to_download, verboso) {
+
   requests <- lapply(files_to_download, httr2::request)
 
   dest_files <- fs::path(data_dir, basename(files_to_download))
@@ -123,7 +136,7 @@ perform_requests_in_parallel <- function(requests, dest_files, verboso) {
     requests,
     paths = dest_files,
     on_error = "continue",
-    progress = ifelse(verboso == TRUE, 'z', FALSE)
+    progress = ifelse(verboso == TRUE, ' ', FALSE)
   )
 }
 

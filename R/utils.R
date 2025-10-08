@@ -10,7 +10,7 @@
 arrow_open_dataset <- function(filename){
 
   tryCatch(
-    arrow::open_dataset(filename),
+    arrow::open_dataset(filename, format = 'parquet'),
     error = function(e){
       msg <- paste(
         "Arquivo local possivelmente corrompido. ",
@@ -132,7 +132,7 @@ merge_results <- function(con,
                           resultado_completo){
 
 
-  select_columns_y <- c('lat', 'lon', 'tipo_resultado', 'precisao',
+  select_columns_y <- c('lat', 'lon', 'precisao', 'tipo_resultado', 'desvio_metros',
                         'endereco_encontrado', 'logradouro_encontrado', 'contagem_cnefe')
 
   if (isTRUE(resultado_completo)) {

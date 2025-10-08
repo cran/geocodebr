@@ -85,6 +85,7 @@ df <- geocodebr::geocode(
   campos_endereco = campos,
   resultado_completo = FALSE,
   resolver_empates = FALSE,
+  h3_res = NULL,
   resultado_sf = FALSE,
   verboso = FALSE,
   cache = TRUE,
@@ -98,8 +99,10 @@ df <- geocodebr::geocode(
 
 Os resultados do **{geocodebr}** são classificados em seis categorias
 gerais de `precisao`, dependendo do nível de exatidão com que cada
-endereço de input foi encontrado nos dados do CNEFE. Para mais
-informações, consulte a documentação da função ou a [**vignette
+endereço de input foi encontrado nos dados do CNEFE. s resultados trazem
+ainda uma estimativa da incerteza da localização encontrado como um
+`desvio_metros`. Para mais informações, consulte a documentação da
+função ou a [**vignette
 “geocode”**](https://ipeagit.github.io/geocodebr/articles/geocode.html).
 
 ### 2. Geolocalização reversa: de coordenadas espaciais para endereços
@@ -141,10 +144,26 @@ ceps <- c("70390-025", "20071-001")
 
 df_ceps <- geocodebr::busca_por_cep(
  cep = ceps,
+ h3_res = NULL,
  resultado_sf = FALSE,
  verboso = FALSE
  )
 ```
+
+## Nota <a href="https://www.ipea.gov.br"><img src="man/figures/ipea_logo.png" alt="IPEA" align="right" width="300"/></a>
+
+Os dados originais do CNEFE são coletados pelo Instituto Brasileiro de
+Geografia e Estatística (IBGE). O **{geocodebr}** foi desenvolvido por
+uma equipe do Instituto de Pesquisa Econômica Aplicada (Ipea)
+
+## Instituições utilizando o {geocodebr}
+
+Além de diversos pesquisadores e empresas que utilizam o {geocodebr}, o
+pacote também tem sido utilizado oficialmente por algumas instituições
+públicas no planejamento e avaliação de políticas públicas. Entre elas:
+
+- Banco Central do Brasil
+- Ministério do Desenvolvimento Social e Combate à Fome (MDS)
 
 ## Projetos relacionados
 
@@ -171,9 +190,3 @@ desempenho.
 - [{googleway}](https://cran.r-project.org/package=googleway) and
   [{mapsapi}](https://cran.r-project.org/package=mapsapi): interface
   para API do Google Maps
-
-## Nota <a href="https://www.ipea.gov.br"><img src="man/figures/ipea_logo.png" alt="IPEA" align="right" width="300"/></a>
-
-Os dados originais do CNEFE são coletados pelo Instituto Brasileiro de
-Geografia e Estatística (IBGE). O **{geocodebr}** foi desenvolvido por
-uma equipe do Instituto de Pesquisa Econômica Aplicada (Ipea)

@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2025-07-07" />
+<meta name="date" content="2025-10-08" />
 
 <title>Introdução ao geocodebr</title>
 
@@ -339,7 +339,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">Introdução ao geocodebr</h1>
-<h4 class="date">2025-07-07</h4>
+<h4 class="date">2025-10-08</h4>
 
 
 
@@ -405,26 +405,25 @@ encontrar as coordenadas geográficas dos endereços de input.</li>
 <span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>  <span class="at">campos_endereco =</span> campos,</span>
 <span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  <span class="at">resultado_completo =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>  <span class="at">resolver_empates =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>  <span class="at">resultado_sf =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>  <span class="at">verboso =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>  <span class="at">cache =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>  <span class="at">n_cores =</span> <span class="dv">1</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>)</span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; Warning: Foram encontrados 1 casos de empate. Estes casos foram marcados com valor</span></span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt; `TRUE` na coluna &#39;empate&#39;, e podem ser inspecionados na coluna</span></span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt; &#39;endereco_encontrado&#39;. Alternativamente, use `resolver_empates = TRUE` para que</span></span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; o pacote lide com os empates automaticamente. Ver documentação da função.</span></span></code></pre></div>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>  <span class="at">h3_res =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>  <span class="at">resultado_sf =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>  <span class="at">verboso =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>  <span class="at">cache =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>  <span class="at">n_cores =</span> <span class="dv">1</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>)</span></code></pre></div>
 <p><strong>Nota:</strong> A função <code>geocode()</code> requer que os
 dados do CNEFE estejam armazenados localmente. A primeita vez que a
 função é executada, ela baixa os dados do CNEFE e salva em um cache
-local na sua máquina. No total, esses dados somam cerca de 3 GB, o que
+local na sua máquina. No total, esses dados somam cerca de 1.2 GB, o que
 pode fazer com que a primeira execução da função demore. Esses dados, no
 entanto, são salvos de forma persistente, logo eles são baixados uma
 única vez. Ver abaixo mais informações sobre o cache de dados.</p>
 <p>Os resultados do <strong>{geocodebr}</strong> são classificados em
 seis categorias gerais de <code>precisao</code>, dependendo do nível de
 exatidão com que cada endereço de input foi encontrado nos dados do
-CNEFE. Para mais informações, consulte a documentação da função ou a <a href="https://ipeagit.github.io/geocodebr/articles/geocode.html"><strong>vignette
+CNEFE. s resultados trazem ainda uma estimativa da incerteza da
+localização encontrado como um <code>desvio_metros</code>. Para mais
+informações, consulte a documentação da função ou a <a href="https://ipeagit.github.io/geocodebr/articles/geocode.html"><strong>vignette
 “geocode”</strong></a>.</p>
 </div>
 <div id="geolocalização-reversa-de-coordenadas-espaciais-para-endereços" class="section level3">
@@ -455,15 +454,18 @@ conjunto de coordenadas geográficas. Mais detalhes na <a href="https://ipeagit.
 <p>Por fim, a função <code>busca_por_cep()</code> permite fazer
 consultas de CEPs para encontrar endereços associados a cada CEP. A
 função recebe um vetor de CEPs e retorna um <code>data.frame</code> com
-os endereços e as coordenadas geográficas de cada CEP.</p>
+os endereços e as coordenadas geográficas de cada CEP. O parâmetro
+<code>h3_res</code> pode ser utilizado para incluir no output o id das
+células H3 na resolução espacial desejada.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># amostra de CEPs</span></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>ceps <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;70390-025&quot;</span>, <span class="st">&quot;20071-001&quot;</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
 <span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>df_ceps <span class="ot">&lt;-</span> geocodebr<span class="sc">::</span><span class="fu">busca_por_cep</span>(</span>
 <span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">cep =</span> ceps,</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">resultado_sf =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">verboso =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">h3_res =</span> <span class="dv">9</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">resultado_sf =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">verboso =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 </div>
 <div id="cache-de-dados" class="section level2">
@@ -488,17 +490,8 @@ dentro dela.</li>
 <p>Após rodar o código desta <em>vignette</em>, é provável que o seu
 <em>cache</em> esteja configurado como a seguir:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>geocodebr<span class="sc">::</span><span class="fu">listar_pasta_cache</span>()</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; [1] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0&quot;</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>geocodebr<span class="sc">::</span><span class="fu">listar_dados_cache</span>()</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio.parquet&quot;                                 </span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; [2] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_cep.parquet&quot;                             </span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; [3] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_cep_localidade.parquet&quot;                  </span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; [4] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_localidade.parquet&quot;                      </span></span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; [5] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_logradouro_cep_localidade.parquet&quot;       </span></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; [6] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_logradouro_localidade.parquet&quot;           </span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; [7] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_logradouro_numero_cep_localidade.parquet&quot;</span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [8] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/data_release_v0.2.0/municipio_logradouro_numero_localidade.parquet&quot;</span></span></code></pre></div>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>geocodebr<span class="sc">::</span><span class="fu">listar_dados_cache</span>()</span></code></pre></div>
 </div>
 
 
