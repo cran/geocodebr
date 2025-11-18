@@ -121,32 +121,38 @@ add_precision_col <- function(con, update_tb = NULL){
 }
 
 
-
-
-
-merge_results <- function(con,
+merge_results_to_input <- function(con,
                           x,
                           y,
                           key_column,
                           select_columns,
                           resultado_completo){
 
+  select_columns_y <- c(
+    'lat',
+    'lon',
+    'precisao',
+    'tipo_resultado',
+    'desvio_metros',
+    'endereco_encontrado'
 
-  select_columns_y <- c('lat', 'lon', 'precisao', 'tipo_resultado', 'desvio_metros',
-                        'endereco_encontrado', 'logradouro_encontrado', 'contagem_cnefe')
+  )
 
   if (isTRUE(resultado_completo)) {
-
     # select additional columns to output
-    select_columns_y <- c(select_columns_y, 'numero_encontrado' , 'cep_encontrado',
-                          'localidade_encontrada', 'municipio_encontrado' ,
-                          'estado_encontrado', 'similaridade_logradouro')
+    select_columns_y <- c(select_columns_y, 'logradouro_encontrado',
+                          'numero_encontrado' , 'cep_encontrado',
+                          'localidade_encontrada', 'municipio_encontrado',
+                          'estado_encontrado', 'similaridade_logradouro',
+                          'contagem_cnefe', 'empate')
 
     # relace NULL similaridade_logradouro as 1 because they were found deterministically
     DBI::dbSendQueryArrow(
       con,
-      "UPDATE output_db
+      glue::glue(
+      "UPDATE {y}
       SET similaridade_logradouro = COALESCE(similaridade_logradouro, 1);"
+      )
     )
 
   }
@@ -156,30 +162,31 @@ merge_results <- function(con,
 
   select_clause <- paste0(
     select_x, ',',
-    paste0('sorted_output', ".", select_columns_y, collapse = ", ")
+    paste0(glue::glue('{y}'), ".", select_columns_y, collapse = ", ")
     )
 
   # Create the JOIN clause dynamically
   join_condition <- paste(
-    glue::glue("{x}.{key_column} = sorted_output.{key_column}"),
+    glue::glue("{x}.{key_column} = {y}.{key_column}"),
     collapse = ' ON '
   )
 
   # Create SQL query
   query <- glue::glue(
-    "SELECT {select_clause}
-      FROM {x}
-      LEFT JOIN (
-    SELECT * FROM {y}
-      ORDER BY tempidgeocodebr ) AS sorted_output
-      ON {join_condition};"
-    )
+    "SELECT * FROM
+      (SELECT {select_clause}
+        FROM {x}
+        LEFT JOIN {y}
+        ON {join_condition})
+      ORDER BY
+        tempidgeocodebr;"
+  )
 
   # Execute the query and fetch the merged data
   merged_data <- DBI::dbGetQuery(con, query)
 
   return(merged_data)
-  }
+}
 
 
 
@@ -378,10 +385,65 @@ get_prob_match_cutoff <- function(match_type){
   }
 
 
-
 # create a dummy function that uses nanoarrow with no effect
 # nanoarrow is only used internally in DBI::dbWriteTableArrow()
 # however, if we do not put this dummy function here, CRAN check flags an error
 dummy <- function() {
   nanoarrow::as_nanoarrow_schema
   }
+
+
+# Cria coluna dummy no input padronizado identificando se logradouro é daqueles
+# que gera confusao (e.g. uma letra (e.g. RUA A, RUA B, RUA C, ....) ou compostos
+# só por dígitos (RUA 1, RUA 10, RUA 20, ...))
+cria_col_logradouro_confusao <- function(con) {
+
+  # Add the column with default 0 (avoids updating all rows later)
+  DBI::dbExecute(
+    con,
+    "ALTER TABLE input_padrao_db
+      ADD COLUMN log_causa_confusao BOOLEAN DEFAULT false;"
+  )
+
+  # Ambiguos numero por extenso
+  ruas_num_ext <- paste(
+    paste("RUA", c(
+      'UM','DOIS','TRES', 'CINCO','SEIS','SETE','OITO','NOVE','DEZ',
+      'ONZE','DOZE','TREZE'
+    )),
+    collapse = "|"
+  )
+  ruas_num_ext <- paste0("(", ruas_num_ext, ")$")
+
+  # 2) Flip to 1 for rows matching our regex
+  DBI::dbExecute(
+    con,
+    glue::glue(
+    r"{UPDATE input_padrao_db
+    SET log_causa_confusao = true
+    WHERE
+      (REGEXP_MATCHES(logradouro, '^(RUA|TRAVESSA|RAMAL|BECO|BLOCO|AVENIDA|RODOVIA|ESTRADA)\s+([A-Z]{{1,2}}-?|[0-9]{{1,3}}|[A-Z]{{1,2}}-?[0-9]{{1,3}}|[A-Z]{{1,2}}\s+[0-9]{{1,3}}|[0-9]{{1,3}}-?[A-Z]{{1,2}})(\s+KM( \d+)?)?$')
+       OR REGEXP_MATCHES(logradouro, '{ruas_num_ext}')
+       )
+        -- ainda dah pra salvar enderecos com datas (e.g. 'RUA 15 DE NOVEMBRO')
+        AND NOT REGEXP_MATCHES(logradouro, '\bDE (JANEIRO|FEVEREIRO|MARCO|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO)\b');}"
+    )
+  )
+}
+
+
+# register all geocodebr-cnefe tables
+register_geocodebr_tables <- function(con){
+
+  all_tables <- geocodebr::listar_dados_cache()
+
+  for(i in all_tables){
+
+    tb_name <- basename(i)
+    tb_name <- fs::path_ext_remove(tb_name)
+
+    temp_arrow <- arrow::open_dataset(i)
+
+    duckdb::duckdb_register_arrow(con, tb_name, temp_arrow)
+  }
+}

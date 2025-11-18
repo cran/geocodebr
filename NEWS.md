@@ -1,4 +1,28 @@
-# geocodebr 0.3.0 dev
+# geocodebr 0.4.0
+
+## Mudanças grandes (Major changes)
+
+- A função `geocode()` agora não aplica match probabilístico em lograouros cujo 
+nome são só uma letra (e.g. RUA A, RUA B, RUA C) ou compostos só por dígitos 
+(RUA 1, RUA 10, RUA 20). [Encerra issue #67](https://github.com/ipeaGIT/geocodebr/issues/67).
+Isso diminui muito os casos de falso positivo no match probabilístico.
+- O parâmetro `h3_res` utilizado nas funções `geocode()` e `busca_por_cep()` 
+agora aceita um vetor de números indicando diferentes resoluções de H3. [Encerra issue #72](https://github.com/ipeaGIT/geocodebr/issues/72).
+
+## Mudanças pequenas (Minor changes)
+
+- Definição de número de `n_cores` para paralelização mais segura usando `{parallelly}`.
+- Ganhos de performance em algumas funções de match (issues [#73](https://github.com/ipeaGIT/geocodebr/issues/73), 
+[#74](https://github.com/ipeaGIT/geocodebr/issues/74) e [#75](https://github.com/ipeaGIT/geocodebr/issues/75)).
+- Tratamento de casos de empate agora é feito interamente dentro do DuckDB. [Encerra issue #57](https://github.com/ipeaGIT/geocodebr/issues/57) 
+- O geocodebr não depende mais do pacote Rcpp, que antes era utilizado para 
+calcular distâncias entre coordendas. Esses cálculo agora é feito inteiramente
+dentro do DuckDB.
+
+
+
+
+# geocodebr 0.3.0
 
 ## Mudanças grandes (Major changes)
 
@@ -6,20 +30,25 @@
 o usuário inserir uma coluna no output indicando o id da célula H3 na resolução 
 espacial desejada. [Encerra issue #43](https://github.com/ipeaGIT/geocodebr/issues/43).
 - O output da função `geocode()` agora inclui uma nova coluna `desvio_metros` que 
-apresenta uma forma intuitiva o grau de incerteza do resultado encontrado. [Encerra issue #11](https://github.com/ipeaGIT/geocodebr/issues/11).
+apresenta de forma intuitiva o grau de incerteza do resultado encontrado. [Encerra issue #11](https://github.com/ipeaGIT/geocodebr/issues/11).
 - Nova base de dados (release `v0.3.0`). A principal mudança aqui foi a 
 estratégia de agregação de coordenadas. Na versão anterior, a base consistia numa
 média simples das coordenadas dos pontos que pertenciam ao mesmo grupo de colunas.
 Na atual versão, esse cálculo é feito em duas etapas. Primeiro encontramos o ponto 
 médio e calculamos sua distância até todos os pontos. Em seguida, descartamos 
-aqueles pontos que estão  acima do percentil 95% de distância, e calculamos então 
-novo ponto médio. Isso evita eventual distorções quando há poucos pontos muito 
+aqueles pontos que estão acima do percentil 95% de distância, e recalculamos então 
+novo ponto médio. Isso evita eventuais distorções quando há poucos pontos muito 
 isolados. 
 - A nova base de dados (release `v0.3.0`) utiliza arquivos em formato `.parquet`
 compactados, o que diminuiu pela metade o tamanho dos arquivos (de `2.98` GB para 
-`1.17` GB) e acelera o processo de download dos dados.
+`1.17` GB) e acelera o processo de download dos dados (embora deixa o 
+processamento em si ligeiramente mais devagar).
 - Os dados de cache agora são armazenados na sub-pasta `"geocodebr_data_release_{data_release}"`, 
-dentro da pasta de cache definida pelo usuário. Os dados de releases antigos passam a ser deletados automaticamente quando há atualização do data release. [Encerra issue #64](https://github.com/ipeaGIT/geocodebr/issues/64).
+dentro da pasta de cache definida pelo usuário. De agora em diante, os dados de 
+releases antigos passam a ser deletados automaticamente quando há atualização do 
+data release. [Encerra issue #64](https://github.com/ipeaGIT/geocodebr/issues/64).
+Mas os dados das versões anteriores `v0.2.0` devem ser apagados manualmente com
+a função `deletar_pasta_cache()`.
 
 # geocodebr 0.2.1
 

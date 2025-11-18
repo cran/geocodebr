@@ -40,8 +40,9 @@ mais provável. Para mais detalhes sobre como é feito o processo de
 desempate, consulte abaixo a seção "Detalhes".}
 
 \item{h3_res}{Um número que indica a resolução espacial da célula hexagonal
-H3 da localização dos pontos retornados. Por padrão, é NULL. Detalhes sobre
-as resoluções disponíveis em \url{https://h3geo.org/docs/core-library/restable/}}
+H3 da localização dos pontos retornados. Também aceita um vetor de números,
+e.g. \code{c(8, 9)} Por padrão, é \code{NULL}. Detalhes sobre as resoluções disponíveis
+em \url{https://h3geo.org/docs/core-library/restable/}}
 
 \item{resultado_sf}{Lógico. Indica se o resultado deve ser um objeto espacial
 da classe \code{sf}. Por padrão, é \code{FALSE}, e o resultado é um \code{data.frame} com
@@ -239,7 +240,7 @@ probabilistico, e de \code{0.90} nos demais casos.
 }
 
 \examples{
-\dontshow{if (identical(tolower(Sys.getenv("NOT_CRAN")), "true")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (identical(tolower(Sys.getenv("NOT_CRAN")), "true")) withAutoprint(\{ # examplesIf}
 library(geocodebr)
 
 # ler amostra de dados

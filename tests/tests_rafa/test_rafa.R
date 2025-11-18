@@ -1,4 +1,4 @@
-
+# test
 df_rp <- data.frame(
   estado = 'df',
   # cep=70355030,
@@ -159,7 +159,7 @@ extrachecks::extrachecks()
 
 
 # submit to CRAN -----------------
-usethis::use_cran_comments()
+# usethis::use_cran_comments()
 
 
 devtools::submit_cran()
