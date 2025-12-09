@@ -2,13 +2,15 @@ Type: Package
 Package: geocodebr
 Title: Geolocalização De Endereços Brasileiros (Geocoding Brazilian
         Addresses)
-Version: 0.4.0
+Version: 0.5.0
 Authors@R: c(
     person("Rafael H. M.", "Pereira", , "rafa.pereira.br@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2125-7465")),
     person("Daniel", "Herszenhut", , "dhersz@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0001-8066-1105")),
     person("Arthur", "Bazolli", , "baz.arthur@gmail.com", role = "ctb"),
+    person("Pedro", "Milreu Cunha", , "pedro.cunha@ipea.gov.br", role = "ctb"),
+    person("ITpS - Instituto Todos pela Saúde", role = "fnd"),
     person("Ipea - Instituto de Pesquisa Econômica Aplicada", role = c("cph", "fnd"))
   )
 Description: Método simples e eficiente de geolocalizar dados no Brasil. O 
@@ -26,9 +28,9 @@ URL: https://github.com/ipeaGIT/geocodebr,
         https://ipeagit.github.io/geocodebr/
 BugReports: https://github.com/ipeaGIT/geocodebr/issues
 Depends: R (>= 4.1.0)
-Imports: arrow (>= 15.0.1), checkmate, cli, data.table, DBI, dplyr,
-        duckdb, enderecobr (>= 0.4.1), fs, glue, h3r, httr2 (>= 1.0.0),
-        nanoarrow (>= 0.3.0.1), parallelly, purrr, rlang, sf,
+Imports: arrow (>= 15.0.1), checkmate, callr, cli, data.table, DBI,
+        dplyr, duckdb, enderecobr (>= 0.4.1), fs, glue, h3r, httr2 (>=
+        1.0.0), nanoarrow (>= 0.3.0.1), parallelly, purrr, rlang, sf,
         sfheaders, tools
 Suggests: covr, dbplyr, geobr, ggplot2 (>= 3.3.1), knitr, rmarkdown,
         scales, testthat (>= 3.0.0)
@@ -37,13 +39,15 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 NeedsCompilation: no
-Packaged: 2025-11-18 21:37:14 UTC; rafap
+Packaged: 2025-12-09 18:47:43 UTC; r1701707
 Author: Rafael H. M. Pereira [aut, cre] (ORCID:
     <https://orcid.org/0000-0003-2125-7465>),
   Daniel Herszenhut [aut] (ORCID:
     <https://orcid.org/0000-0001-8066-1105>),
   Arthur Bazolli [ctb],
+  Pedro Milreu Cunha [ctb],
+  ITpS - Instituto Todos pela Saúde [fnd],
   Ipea - Instituto de Pesquisa Econômica Aplicada [cph, fnd]
 Maintainer: Rafael H. M. Pereira <rafa.pereira.br@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-11-18 21:50:01 UTC
+Date/Publication: 2025-12-09 19:00:02 UTC

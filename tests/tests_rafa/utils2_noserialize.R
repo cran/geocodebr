@@ -7,7 +7,7 @@
 #' @return An `arrow::Dataset`
 #'
 #' @keywords internal
-arrow_open_dataset <- function(filename){ # nocov start
+arrow_open_dataset <- function(filename){
 
   tryCatch(
     arrow::open_dataset(filename, format = 'parquet'),
@@ -20,7 +20,7 @@ arrow_open_dataset <- function(filename){ # nocov start
       stop(msg)
     }
   )
-} # nocov end
+}
 
 #' Message when caching file
 #'
@@ -31,34 +31,34 @@ arrow_open_dataset <- function(filename){ # nocov start
 #'
 #' @keywords internal
 cache_message <- function(local_file = parent.frame()$local_file,
-                          cache = parent.frame()$cache){ # nocov start
+                          cache = parent.frame()$cache){
 
   # name of local file
   file_name <- basename(local_file[1])
   dir_name <- dirname(local_file[1])
 
   ## if file already exists
-    # YES cache
-    if (file.exists(local_file) & isTRUE(cache)) {
-       message('Reading data cached locally.')
-       }
+  # YES cache
+  if (file.exists(local_file) & isTRUE(cache)) {
+    message('Reading data cached locally.')
+  }
 
-    # NO cache
-    if (file.exists(local_file) & isFALSE(cache)) {
-       message('Overwriting data cached locally.')
-       }
+  # NO cache
+  if (file.exists(local_file) & isFALSE(cache)) {
+    message('Overwriting data cached locally.')
+  }
 
   ## if file does not exist yet
   # YES cache
   if (!file.exists(local_file) & isTRUE(cache)) {
-     message(paste("Downloading data and storing it locally for future use."))
-     }
+    message(paste("Downloading data and storing it locally for future use."))
+  }
 
   # NO cache
   if (!file.exists(local_file) & isFALSE(cache)) {
-     message(paste("Downloading data. Setting 'cache = TRUE' is strongly recommended to speed up future use. File will be stored locally at:", dir_name))
-     }
-  } # nocov end
+    message(paste("Downloading data. Setting 'cache = TRUE' is strongly recommended to speed up future use. File will be stored locally at:", dir_name))
+  }
+}
 
 
 #' Update input_padrao_db to remove observations previously matched
@@ -70,7 +70,7 @@ cache_message <- function(local_file = parent.frame()$local_file,
 #' @return Drops observations from input_padrao_db
 #'
 #' @keywords internal
-update_input_db <- function(con, update_tb = 'input_padrao_db', reference_tb){ # nocov start
+update_input_db <- function(con, update_tb = 'input_padrao_db', reference_tb){
 
   # update_tb = 'input_padrao_db'
   # reference_tb = 'output_caso_1'
@@ -80,7 +80,7 @@ update_input_db <- function(con, update_tb = 'input_padrao_db', reference_tb){ #
     WHERE tempidgeocodebr IN (SELECT tempidgeocodebr FROM {reference_tb});")
 
   DBI::dbExecute(con, query_remove_matched)
-} # nocov end
+}
 
 
 #' Add a column with info of geocode match_type
@@ -91,13 +91,13 @@ update_input_db <- function(con, update_tb = 'input_padrao_db', reference_tb){ #
 #' @return Adds a new column to a table in con
 #'
 #' @keywords internal
-add_precision_col <- function(con, update_tb = NULL){ # nocov start
+add_precision_col <- function(con, update_tb = NULL){
 
   # update_tb = "output_db"
 
   # add empty column
   query_add_col <- glue::glue("ALTER TABLE {update_tb} ADD COLUMN precisao TEXT;")
-  DBI::dbExecute(con, query_add_col)
+  DBI::dbSendQueryArrow(con, query_add_col)
 
   # populate column
   query_precision_cats <- glue::glue("
@@ -117,16 +117,16 @@ add_precision_col <- function(con, update_tb = NULL){ # nocov start
 
 
   # DBI::dbExecute(con, query_precision_cats )
-  DBI::dbExecute(con, query_precision_cats )
-} # nocov end
+  DBI::dbSendQueryArrow(con, query_precision_cats )
+}
 
 
 merge_results_to_input <- function(con,
-                          x,
-                          y,
-                          key_column,
-                          select_columns,
-                          resultado_completo){ # nocov start
+                                   x,
+                                   y,
+                                   key_column,
+                                   select_columns,
+                                   resultado_completo){
 
   select_columns_y <- c(
     'lat',
@@ -147,10 +147,10 @@ merge_results_to_input <- function(con,
                           'contagem_cnefe', 'empate')
 
     # relace NULL similaridade_logradouro as 1 because they were found deterministically
-    DBI::dbExecute(
+    DBI::dbSendQueryArrow(
       con,
       glue::glue(
-      "UPDATE {y}
+        "UPDATE {y}
       SET similaridade_logradouro = COALESCE(similaridade_logradouro, 1);"
       )
     )
@@ -163,7 +163,7 @@ merge_results_to_input <- function(con,
   select_clause <- paste0(
     select_x, ',',
     paste0(glue::glue('{y}'), ".", select_columns_y, collapse = ", ")
-    )
+  )
 
   # Create the JOIN clause dynamically
   join_condition <- paste(
@@ -171,22 +171,33 @@ merge_results_to_input <- function(con,
     collapse = ' ON '
   )
 
+  tmp_file <- file.path(tempdir(), "output_geocodebr.parquet")
+
+
   # Create SQL query
   query <- glue::glue(
-    "SELECT * FROM
-      (SELECT {select_clause}
-        FROM {x}
-        LEFT JOIN {y}
-        ON {join_condition})
-      ORDER BY
-        tempidgeocodebr;"
+    "COPY (
+          SELECT * FROM
+            (SELECT {select_clause}
+               FROM {x}
+               LEFT JOIN {y}
+                 ON {join_condition})
+          ORDER BY tempidgeocodebr
+      )
+      TO '{tmp_file}' (FORMAT PARQUET);"
   )
 
   # Execute the query and fetch the merged data
-  merged_data <- DBI::dbGetQuery(con, query)
+  DBI::dbExecute(con, query)
+
+  # fetch the merged data
+  merged_data <- arrow::read_parquet(tmp_file)
+
+  # Delete temp output file
+  unlink(tmp_file)
 
   return(merged_data)
-} # nocov end
+}
 
 
 
@@ -194,7 +205,7 @@ merge_results_to_input <- function(con,
 #' create index
 #'
 #' @keywords internal
-create_index <- function(con, tb, cols, operation, overwrite=TRUE){ # nocov start
+create_index <- function(con, tb, cols, operation, overwrite=TRUE){
 
   idx <- paste0('idx_', tb)
   cols_group <- paste(cols, collapse = ", ")
@@ -212,12 +223,12 @@ create_index <- function(con, tb, cols, operation, overwrite=TRUE){ # nocov star
 
   query_index <- sprintf('%s INDEX %s ON %s(%s);', operation, idx, tb, cols_group)
   DBI::dbExecute(con, query_index)
-} # nocov end
+}
 
 
 
 
-get_key_cols <- function(match_type) { # nocov start
+get_key_cols <- function(match_type) {
   relevant_cols <- if (match_type %in% c('dn01', 'da01', 'pn01', 'pa01') ) {
     c("estado", "municipio", "logradouro", "numero", "cep", "localidade")
   } else if (match_type %in% c('dn02', 'da02', 'pn02', 'pa02')) {
@@ -245,7 +256,7 @@ get_key_cols <- function(match_type) { # nocov start
   }
 
   return(relevant_cols)
-} # nocov end
+}
 
 ### ideal sequence of match types
 all_possible_match_types <- c(
@@ -281,29 +292,29 @@ all_possible_match_types <- c(
 
 number_exact_types <- c(
   "dn01", "dn02", "dn03", "dn04"
-  )
+)
 
 number_interpolation_types <- c(
   "da01", "da02", "da03", "da04"
-  )
+)
 
 probabilistic_exact_types <- c(
   "pn01", "pn02", "pn03", "pn04"
 
-  )
+)
 
 probabilistic_interpolation_types <- c(
   "pa01", "pa02", "pa03", "pa04"
-  )
+)
 
 exact_types_no_number <- c(
   "dl01", "dl02", "dl03", "dl04",
   "dc01", "dc02", "db01", "dm01"
-  )
+)
 
 probabilistic_types_no_number <- c(
   "pl01", "pl02", "pl03", "pl04"
-  )
+)
 
 exact_types__no_logradouro <- c(
   "dc01", "dc02", "db01", "dm01"
@@ -315,7 +326,7 @@ exact_types__no_logradouro <- c(
 
 
 
-assert_and_assign_address_fields <- function(address_fields, addresses_table) { # nocov start
+assert_and_assign_address_fields <- function(address_fields, addresses_table) {
   possible_fields <- c(
     "logradouro", "numero", "cep", "localidade", "municipio", "estado"
   )
@@ -342,11 +353,11 @@ assert_and_assign_address_fields <- function(address_fields, addresses_table) { 
   complete_fields_list <- append(as.list(address_fields), missing_fields_list)
 
   return(complete_fields_list)
-} # nocov end
+}
 
 
 
-get_reference_table <- function(match_type){ # nocov start
+get_reference_table <- function(match_type){
 
   # key_cols = get_key_cols('da03')
 
@@ -374,29 +385,29 @@ get_reference_table <- function(match_type){ # nocov start
   }
 
   return(table_name)
-  } # nocov end
+}
 
 
 # min cutoff for string match
 # min cutoff for probabilistic string match of logradouros
-get_prob_match_cutoff <- function(match_type){ # nocov start
+get_prob_match_cutoff <- function(match_type){
   min_cutoff <- ifelse(match_type %in% c('pn01', 'pa01', 'pl01'), 0.85,  0.9)
   return(min_cutoff)
-  } # nocov end
+}
 
 
 # create a dummy function that uses nanoarrow with no effect
 # nanoarrow is only used internally in DBI::dbWriteTableArrow()
 # however, if we do not put this dummy function here, CRAN check flags an error
-dummy <- function() { # nocov start
+dummy <- function() {
   nanoarrow::as_nanoarrow_schema
-  } # nocov end
+}
 
 
 # Cria coluna dummy no input padronizado identificando se logradouro é daqueles
 # que gera confusao (e.g. uma letra (e.g. RUA A, RUA B, RUA C, ....) ou compostos
 # só por dígitos (RUA 1, RUA 10, RUA 20, ...))
-cria_col_logradouro_confusao <- function(con) { # nocov start
+cria_col_logradouro_confusao <- function(con) {
 
   # Add the column with default 0 (avoids updating all rows later)
   DBI::dbExecute(
@@ -419,7 +430,7 @@ cria_col_logradouro_confusao <- function(con) { # nocov start
   DBI::dbExecute(
     con,
     glue::glue(
-    r"{UPDATE input_padrao_db
+      r"{UPDATE input_padrao_db
     SET log_causa_confusao = true
     WHERE
       (REGEXP_MATCHES(logradouro, '^(RUA|TRAVESSA|RAMAL|BECO|BLOCO|AVENIDA|RODOVIA|ESTRADA)\s+([A-Z]{{1,2}}-?|[0-9]{{1,3}}|[A-Z]{{1,2}}-?[0-9]{{1,3}}|[A-Z]{{1,2}}\s+[0-9]{{1,3}}|[0-9]{{1,3}}-?[A-Z]{{1,2}})(\s+KM( \d+)?)?$')
@@ -429,5 +440,21 @@ cria_col_logradouro_confusao <- function(con) { # nocov start
         AND NOT REGEXP_MATCHES(logradouro, '\bDE (JANEIRO|FEVEREIRO|MARCO|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO)\b');}"
     )
   )
-} # nocov end
+}
 
+
+# register all geocodebr-cnefe tables
+register_geocodebr_tables <- function(con){
+
+  all_tables <- geocodebr::listar_dados_cache()
+
+  for(i in all_tables){
+
+    tb_name <- basename(i)
+    tb_name <- fs::path_ext_remove(tb_name)
+
+    temp_arrow <- arrow::open_dataset(i)
+
+    duckdb::duckdb_register_arrow(con, tb_name, temp_arrow)
+  }
+}

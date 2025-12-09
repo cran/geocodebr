@@ -1,9 +1,10 @@
 create_geocodebr_db <- function( # nocov start
     db_path = "tempdir",
-    n_cores = NULL){
+    n_cores = parent.frame()$n_cores){
 
   # check input
-  checkmate::assert_number(n_cores, null.ok = TRUE)
+  checkmate::assert_number(n_cores, lower = 1, finite = TRUE, null.ok = TRUE)
+
   # checkmate::assert_string(db_path, pattern = "tempdir|memory")
 
 
@@ -31,7 +32,14 @@ create_geocodebr_db <- function( # nocov start
     )
   }
 
+  # Set threads
   DBI::dbExecute(con, sprintf("SET threads = %s;", n_cores))
+
+
+  # Silence progress bar from duckdb
+  DBI::dbExecute(con, "SET enable_progress_bar = false")
+
+
 
   # Set Memory limit
   # DBI::dbExecute(con, "SET memory_limit = '8GB'")

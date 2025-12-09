@@ -76,13 +76,6 @@
 
 
 devtools::load_all('.')
-library(dplyr)
-# library(geocodebr)
-# library(enderecobr)
-# library(data.table)
-# library(arrow)
-# library(duckdb)
-
 
 # open input data
 data_path <- system.file("extdata/large_sample.parquet", package = "geocodebr")
@@ -127,35 +120,58 @@ campos <- geocodebr::definir_campos(
 # temp_df <- filter(input_df,id %in% c(1371)  )
 
 
-bench::mark( iterations = 1,
+bench::mark(
   v3 <- geocode(
     enderecos = input_df,
     campos_endereco = campos,
-    n_cores = ncores,
+     n_cores = 7,
     resultado_completo = F,
     verboso = T,
-    resultado_sf = T,
+    # resultado_sf = T,
     resolver_empates = T,
-    h3_res = 9
+    # h3_res = 9,
+    cache= T, padronizar_enderecos = T
   )
 )
 
-# expression           min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     time       gc
-#       orig         33.5s  33.5s    0.0299    77.1MB    0.239     1     8      33.5s <dt>   <Rprofmem> <bench_tm>
-#       duckrafa     50.2s    0.0199    56.5MB    0.160     1     8      50.2s <dt>   <Rprofmem> <bench_tm>
 
-#         v2_F       25.6s  25.6s    0.0391    64.6MB    0.352     1     9      25.6s <dt>
-#         v3_F       26.2s  26.2s    0.0381      65MB    0.343     1     9      26.2s <dt>
+gc(T,T,T)
+bench::mark(
+
+  iterations = 1, check = F,
+
+  # callr = geocode_callr(
+  #   enderecos = df,
+  #   campos_endereco = campos,
+  #   n_cores = 7,
+  #   resultado_completo = F,
+  #   resolver_empates = T
+  #   ),
+
+  original = geocode(
+    enderecos = input_df,
+    campos_endereco = campos,
+    n_cores = 7,
+    resultado_completo = F,
+    resolver_empates = T
+    )
+)
+
+#   expression     min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory
+#   <bch:expr> <bch:t> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list> <list>
+# 1 original     24.3m  24.3m  0.000685    8.24GB  0.00479     1     7      24.3m <dt>   <Rprofmem>
+
+#   expression     min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory
+# v0.4.0 CRAN     33.5m  33.5m  0.000497    8.06GB  0.00746     1    15      33.5m <NULL> <Rprofmem>
+# v0.5.0 dev      22.2m  22.2m  0.000749    8.05GB  0.00674     1     9      22.2m <dt>   <Rprofmem>
+# v0.5.0 devcallr 5.94m  5.94m  0.00280   1016.2MB  0           1     0      5.94m <NULL> <Rprofmem>
 
 
-    # v2: 729 empates
-# v3: 744 empates
+# args: n_cores = 7, resultado_completo = F, verboso = T, resultado_sf = T, resolver_empates = T, h3_res = 9
+# expression      min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     time       gc
+# v0.4.0        28.6s  28.6s    0.0350      83MB    0.245     1     7      28.6s <sf>   <Rprofmem> <bench_tm> <tibble>
+# v0.5.0_dev    7.63s  7.63s     0.131    39.4MB    0.918     1     7      7.63s <sf>   <Rprofmem> <bench_tm> <tibble>
 
-# sequencia de matches
-#   expression    min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result memory     time       gc
-#           v2  28.4s  28.4s    0.0352    3.06GB    0.246     1     7
-#           v3  34.9s  34.9s    0.0287    78.6MB    0.401     1    14      34.9s
-#       v3 1.4  32.1s  32.1s    0.0311    87.5MB    0.280     1     9      32.1s
 
 
 
@@ -306,4 +322,61 @@ unique(df_rafa$match_type) |> length()
 
 table(df_rafa$match_type)
 
+
+# parallel callr --------------------------------------
+
+library(future.callr)
+library(future)
+library(furrr)
+
+future::plan(future::multisession(workers = 3))
+
+input_df$estado <- enderecobr::padronizar_estados(input_df$uf)
+
+
+
+
+bench::bench_time(
+a <-   split(input_df, f = input_df$estado) |>
+    furrr::future_map(
+      .f = function(x){
+        geocode(
+          enderecos = x,
+          campos_endereco = campos,
+          resultado_completo = F,
+          resolver_empates = T
+        )
+      }
+        )
+
+)
+
+
+future::plan(future.callr::callr)
+
+bench::bench_time(
+  split(input_df, f = "uf") |>
+    furrr::future_map(
+      .f = function(x){
+        geocode_callr(
+          enderecos = x,
+          campos_endereco = campos,
+          n_cores = 7,
+          resultado_completo = F,
+          resolver_empates = T
+        )
+      }
+    )
+
+)
+
+bench::bench_time(
+        geocode_callr(
+          enderecos = df,
+          campos_endereco = campos,
+          n_cores = 10,
+          resultado_completo = F,
+          resolver_empates = T
+        )
+)
 

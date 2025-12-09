@@ -31,6 +31,8 @@ Authors:
 Other contributors:
 \itemize{
   \item Arthur Bazolli \email{baz.arthur@gmail.com} [contributor]
+  \item Pedro Milreu Cunha \email{pedro.cunha@ipea.gov.br} [contributor]
+  \item ITpS - Instituto Todos pela Saúde [funder]
   \item Ipea - Instituto de Pesquisa Econômica Aplicada [copyright holder, funder]
 }
 

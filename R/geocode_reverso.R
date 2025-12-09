@@ -33,8 +33,7 @@
 #' df_enderecos <- geocodebr::geocode_reverso(
 #'   pontos = ponto,
 #'   dist_max = 800,
-#'   verboso = TRUE,
-#'   n_cores = 1
+#'   verboso = TRUE
 #'   )
 #'
 #'head(df_enderecos)
@@ -44,14 +43,13 @@ geocode_reverso <- function(pontos,
                             dist_max = 1000,
                             verboso = TRUE,
                             cache = TRUE,
-                            n_cores = 1){
+                            n_cores = NULL){
 
   # check input
   checkmate::assert_class(pontos, 'sf')
   checkmate::assert_number(dist_max, lower = 500, upper = 100000) # max 100 Km
   checkmate::assert_logical(verboso)
   checkmate::assert_logical(cache)
-  checkmate::assert_number(n_cores)
 
   # check if geometry type is POINT
   if (any(sf::st_geometry_type(pontos) != 'POINT')) {
@@ -94,6 +92,7 @@ geocode_reverso <- function(pontos,
   bbox_lon_max <- max(coords$lon_max)
 
 
+
   # check if input falls within Brazil
   bbox_brazil <- data.frame(
     xmin = -73.99044997,
@@ -107,9 +106,9 @@ geocode_reverso <- function(pontos,
      bbox_lon_max > bbox_brazil$xmax |
      bbox_lat_min < bbox_brazil$ymin |
      bbox_lat_max > bbox_brazil$ymax
-     ) {
+  ) {
     cli::cli_abort(error_msg)
-    }
+  }
 
 
   # download cnefe  -------------------------------------------------------
@@ -120,6 +119,9 @@ geocode_reverso <- function(pontos,
     verboso = verboso,
     cache = cache
   )
+
+  # creating a temporary db and register the input table data
+  con <- create_geocodebr_db(n_cores = n_cores)
 
 
   # limita escopo de busca aos municipios  -------------------------------------------------------
@@ -142,6 +144,11 @@ geocode_reverso <- function(pontos,
   potential_munis <- unlist(potential_munis) |> unique()
   potential_munis <- enderecobr::padronizar_municipios(potential_munis)
 
+  # lida com munis com apostrofe no nome tipo Olho d'agua
+  potential_munis <- gsub("'", "''", potential_munis, fixed = TRUE)
+
+  unique_munis <- paste(glue::glue("'{potential_munis}'"), collapse = ",")
+
   # build path to local file
   path_to_parquet <- fs::path(
     listar_pasta_cache(),
@@ -149,19 +156,27 @@ geocode_reverso <- function(pontos,
     paste0("municipio_logradouro_numero_cep_localidade.parquet")
   )
 
-  # Load CNEFE data and filter it to include only states
+  # create filtered_cnefe table, filter on the fly
+  cols_to_keep <- c("estado", "municipio", "logradouro", "numero", "cep",
+                    "localidade", "endereco_completo", "lon", "lat")
+  cols_to_keep <- paste0(cols_to_keep, collapse = ", ")
+
+
+  # Load CNEFE data and filter it to include only municipalities
   # present in the input table, reducing the search scope
   # Narrow search global scope of cnefe to bounding box
-  filtered_cnefe <- arrow_open_dataset( path_to_parquet ) |>
-    dplyr::filter(municipio %in% potential_munis) |>
-    dplyr::compute()
+  query_filter_cnefe <- glue::glue(
+    "CREATE TEMP VIEW filtered_cnefe AS
+        SELECT {cols_to_keep}
+        FROM read_parquet('{path_to_parquet}') m
+          WHERE m.municipio IN ({unique_munis});"
+  )
 
 
-  # creating a temporary db and register the input table data
-  con <- create_geocodebr_db(n_cores = n_cores)
+  DBI::dbExecute(con, query_filter_cnefe)
+  # DBI::dbExecute(con, query_filter_cnefe)
+  # b <- DBI::dbReadTable(con, "filtered_cnefe")
 
-  # register filtered_cnefe to db
-  duckdb::duckdb_register_arrow(con, "filtered_cnefe", filtered_cnefe)
 
   # Convert input data frame to DuckDB table
   duckdb::dbWriteTable(con, "input_table_db", coords,
@@ -184,28 +199,43 @@ geocode_reverso <- function(pontos,
 
 
   # Find cases nearby -------------------------------------------------------
-
   query_filter_cases_nearby <- glue::glue(
-      "SELECT
-          input_table_db.* EXCLUDE (lon_min, lon_max, lat_min, lat_max),
-          filtered_cnefe.endereco_completo,
-          filtered_cnefe.estado,
-          filtered_cnefe.municipio,
-          filtered_cnefe.logradouro,
-          filtered_cnefe.numero,
-          filtered_cnefe.cep,
-          filtered_cnefe.localidade,
-          haversine(
-                input_table_db.lat, input_table_db.lon,
-                filtered_cnefe.lat, filtered_cnefe.lon
-                ) AS distancia_metros
+    "WITH dist_data AS (
+        SELECT
+              input_table_db.* EXCLUDE (lon_min, lon_max, lat_min, lat_max),
+              filtered_cnefe.endereco_completo,
+              filtered_cnefe.estado,
+              filtered_cnefe.municipio,
+              filtered_cnefe.logradouro,
+              filtered_cnefe.numero,
+              filtered_cnefe.cep,
+              filtered_cnefe.localidade,
+              haversine(
+                    input_table_db.lat, input_table_db.lon,
+                    filtered_cnefe.lat, filtered_cnefe.lon
+              ) AS distancia_metros
         FROM
-          input_table_db, filtered_cnefe
+              input_table_db, filtered_cnefe
         WHERE
-          input_table_db.lat_min < filtered_cnefe.lat
+              input_table_db.lat_min < filtered_cnefe.lat
           AND input_table_db.lat_max > filtered_cnefe.lat
           AND input_table_db.lon_min < filtered_cnefe.lon
-          AND input_table_db.lon_max > filtered_cnefe.lon;"
+          AND input_table_db.lon_max > filtered_cnefe.lon
+    ),
+
+    ranked AS (
+        SELECT
+            *,
+            RANK() OVER (
+                PARTITION BY tempidgeocodebr
+                ORDER BY distancia_metros ASC
+            ) AS ranking
+        FROM dist_data
+    )
+
+    SELECT * EXCLUDE(tempidgeocodebr, ranking)
+    FROM ranked
+    WHERE ranking = 1;"
   )
 
   output <- DBI::dbGetQuery(con, query_filter_cases_nearby)
@@ -213,17 +243,6 @@ geocode_reverso <- function(pontos,
 
   # organize output -------------------------------------------------
 
-  data.table::setDT(output)
-
-  # find the closest point
-  output <- output[output[, .I[distancia_metros == min(distancia_metros)], by = tempidgeocodebr]$V1]
-
-  # sort data
-  output <- output[order(tempidgeocodebr)]
-  output[, tempidgeocodebr := NULL]
-
-  duckdb::duckdb_unregister_arrow(con, "filtered_cnefe")
-  duckdb::dbDisconnect(con)
 
   # convert df to simple feature
   output_sf <- sfheaders::sf_point(
@@ -235,8 +254,8 @@ geocode_reverso <- function(pontos,
 
   sf::st_crs(output_sf) <- 4674
 
+
+  duckdb::dbDisconnect(con)
+
   return(output_sf)
 }
-
-
-
