@@ -2,12 +2,14 @@ Type: Package
 Package: geocodebr
 Title: Geolocalização De Endereços Brasileiros (Geocoding Brazilian
         Addresses)
-Version: 0.5.0
+Version: 0.6.0
 Authors@R: c(
     person("Rafael H. M.", "Pereira", , "rafa.pereira.br@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2125-7465")),
     person("Daniel", "Herszenhut", , "dhersz@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0001-8066-1105")),
+    person("Gabriel", "Garcia de Almeida", role = "aut",
+           comment = c(ORCID = "0009-0003-3557-7328")),
     person("Arthur", "Bazolli", , "baz.arthur@gmail.com", role = "ctb"),
     person("Pedro", "Milreu Cunha", , "pedro.cunha@ipea.gov.br", role = "ctb"),
     person("ITpS - Instituto Todos pela Saúde", role = "fnd"),
@@ -29,7 +31,7 @@ URL: https://github.com/ipeaGIT/geocodebr,
 BugReports: https://github.com/ipeaGIT/geocodebr/issues
 Depends: R (>= 4.1.0)
 Imports: arrow (>= 15.0.1), checkmate, callr, cli, data.table, DBI,
-        dplyr, duckdb, enderecobr (>= 0.4.1), fs, glue, h3r, httr2 (>=
+        dplyr, duckdb, enderecobr (>= 0.5.0), fs, glue, h3r, httr2 (>=
         1.0.0), nanoarrow (>= 0.3.0.1), parallelly, purrr, rlang, sf,
         sfheaders, tools
 Suggests: covr, dbplyr, geobr, ggplot2 (>= 3.3.1), knitr, rmarkdown,
@@ -39,15 +41,17 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 NeedsCompilation: no
-Packaged: 2025-12-09 18:47:43 UTC; r1701707
+Packaged: 2026-01-23 18:42:09 UTC; r1701707
 Author: Rafael H. M. Pereira [aut, cre] (ORCID:
     <https://orcid.org/0000-0003-2125-7465>),
   Daniel Herszenhut [aut] (ORCID:
     <https://orcid.org/0000-0001-8066-1105>),
+  Gabriel Garcia de Almeida [aut] (ORCID:
+    <https://orcid.org/0009-0003-3557-7328>),
   Arthur Bazolli [ctb],
   Pedro Milreu Cunha [ctb],
   ITpS - Instituto Todos pela Saúde [fnd],
   Ipea - Instituto de Pesquisa Econômica Aplicada [cph, fnd]
 Maintainer: Rafael H. M. Pereira <rafa.pereira.br@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-12-09 19:00:02 UTC
+Date/Publication: 2026-01-23 19:10:02 UTC

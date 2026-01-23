@@ -1,11 +1,12 @@
-match_cases <- function( # nocov start
+match_cases <- function(
+  # nocov start
   con = con,
   x = "input_padrao_db",
   output_tb = "output_db",
   key_cols = key_cols,
   match_type = match_type,
-  resultado_completo){
-
+  resultado_completo
+) {
   # match_type = "dn01"
 
   # get corresponding parquet table
@@ -15,8 +16,6 @@ match_cases <- function( # nocov start
 
   # write cnefe table to db
   register_cnefe_table(con, match_type)
-
-
 
   # Create the JOIN condition by concatenating the key columns
   join_condition <- paste(
@@ -36,22 +35,37 @@ match_cases <- function( # nocov start
   additional_cols <- ""
 
   if (isTRUE(resultado_completo)) {
-
     colunas_encontradas <- paste0(
       glue::glue("{key_cols}_encontrado"),
-      collapse = ', ')
+      collapse = ', '
+    )
 
-    colunas_encontradas <- gsub('localidade_encontrado', 'localidade_encontrada', colunas_encontradas)
+    colunas_encontradas <- gsub(
+      'localidade_encontrado',
+      'localidade_encontrada',
+      colunas_encontradas
+    )
     colunas_encontradas <- paste0(", ", colunas_encontradas)
 
     additional_cols <- paste0(
       glue::glue("{y}.{key_cols} AS {key_cols}_encontrado"),
-      collapse = ', ')
+      collapse = ', '
+    )
 
-    additional_cols <- gsub('localidade_encontrado', 'localidade_encontrada', additional_cols)
+    additional_cols <- gsub(
+      'localidade_encontrado',
+      'localidade_encontrada',
+      additional_cols
+    )
     additional_cols <- paste0(", ", additional_cols)
 
+    # adiciona codigo do setor censitario
+    additional_cols <- paste0(additional_cols, glue::glue(", {y}.cod_setor AS cod_setor"))
+    colunas_encontradas <- paste0(colunas_encontradas, ", cod_setor")
+
   }
+
+
 
   # summarize query
   query_match <- glue::glue(
@@ -66,16 +80,15 @@ match_cases <- function( # nocov start
         {x}.log_causa_confusao,
         {y}.n_casos AS contagem_cnefe {additional_cols}
       FROM {x}
-      LEFT JOIN {y}
+      INNER JOIN {y}
       ON {join_condition}
-      WHERE {cols_not_null} AND {y}.lon IS NOT NULL;"
+      WHERE {cols_not_null};"
   )
 
   DBI::dbExecute(con, query_match)
   # a <- DBI::dbReadTable(con, 'output_db')
   # summary(a$desvio_metros)
   # summary(a$lat)
-
 
   # UPDATE input_padrao_db: Remove observations found in previous step
   temp_n <- update_input_db(
