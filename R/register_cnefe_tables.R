@@ -12,6 +12,11 @@ register_cnefe_table <- function(con, match_type) {
   files <- geocodebr::listar_dados_cache()
   path_to_parquet <- files[grepl(paste0(cnefe_table_name, ".parquet"), files)]
 
+  # make sure we get only the one file from current data release
+  path_to_parquet <- path_to_parquet[ grepl(data_release, path_to_parquet) ]
+
+
+
   # # ----------------------------------------------------------------------------
   # # check if table already exists
   # recorded_tbls <- duckdb::duckdb_list_arrow(conn = con)
@@ -122,6 +127,9 @@ register_unique_logradouros_table <- function(con, match_type) {
   unique_logr_tbl_parquet <- paste0(cnefe_table_name, ".parquet")
   files <- geocodebr::listar_dados_cache()
   path_to_parquet <- files[grepl(unique_logr_tbl_parquet, files)]
+
+  # make sure we get only the one file from current data release
+  path_to_parquet <- path_to_parquet[ grepl(data_release, path_to_parquet) ]
 
   # should use DISTINCT rows
   DISTINCT <- "DISTINCT"

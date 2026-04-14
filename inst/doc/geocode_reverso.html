@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2026-01-26" />
+<meta name="date" content="2026-04-13" />
 
 <title>Geocode reverso</title>
 
@@ -339,7 +339,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">Geocode reverso</h1>
-<h4 class="date">2026-01-26</h4>
+<h4 class="date">2026-04-13</h4>
 
 
 
@@ -377,23 +377,18 @@ encontrados.</p>
 <span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>)</span>
 <span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a></span>
 <span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a><span class="fu">head</span>(df_enderecos)</span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="co">#&gt; Simple feature collection with 3 features and 9 fields</span></span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="co">#&gt; Simple feature collection with 3 features and 8 fields</span></span>
 <span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a><span class="co">#&gt; Geometry type: POINT</span></span>
 <span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a><span class="co">#&gt; Dimension:     XY</span></span>
 <span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a><span class="co">#&gt; Bounding box:  xmin: -51.49634 ymin: -19.29416 xmax: -39.92601 ymax: 0.3649148</span></span>
 <span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a><span class="co">#&gt; Geodetic CRS:  SIRGAS 2000</span></span>
-<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co">#&gt;   id                                                      endereco_completo</span></span>
-<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a><span class="co">#&gt; 1  1                CORREGO BOA VISTA, 32 - LAJINHA, PANCAS - ES, 29750-000</span></span>
-<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="co">#&gt; 2 17        RAMAL MATAO DO PIACACA 1, 14 - PIACACA, SANTANA - AP, 68925-001</span></span>
-<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a><span class="co">#&gt; 3 11 RODOVIA SAO MATEUS NOVA VENECIA, 6 - KM 13, SAO MATEUS - ES, 29944-025</span></span>
-<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="co">#&gt;   estado  municipio                      logradouro numero       cep localidade</span></span>
-<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a><span class="co">#&gt; 1     ES     PANCAS               CORREGO BOA VISTA     32 29750-000    LAJINHA</span></span>
-<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a><span class="co">#&gt; 2     AP    SANTANA        RAMAL MATAO DO PIACACA 1     14 68925-001    PIACACA</span></span>
-<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a><span class="co">#&gt; 3     ES SAO MATEUS RODOVIA SAO MATEUS NOVA VENECIA      6 29944-025      KM 13</span></span>
-<span id="cb1-35"><a href="#cb1-35" tabindex="-1"></a><span class="co">#&gt;   distancia_metros                    geometry</span></span>
-<span id="cb1-36"><a href="#cb1-36" tabindex="-1"></a><span class="co">#&gt; 1         560.6493  POINT (-40.7334 -19.29416)</span></span>
-<span id="cb1-37"><a href="#cb1-37" tabindex="-1"></a><span class="co">#&gt; 2         364.7801 POINT (-51.49634 0.3649148)</span></span>
-<span id="cb1-38"><a href="#cb1-38" tabindex="-1"></a><span class="co">#&gt; 3         373.7088 POINT (-39.92601 -18.69095)</span></span></code></pre></div>
+<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 9</span></span>
+<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a><span class="co">#&gt;      id estado municipio  logradouro    numero cep   localidade distancia_metros</span></span>
+<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="co">#&gt;   &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt;          &lt;int&gt; &lt;chr&gt; &lt;chr&gt;                 &lt;dbl&gt;</span></span>
+<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a><span class="co">#&gt; 1     1 ES     PANCAS     CORREGO BOA …     32 2975… LAJINHA                561.</span></span>
+<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="co">#&gt; 2    11 ES     SAO MATEUS RODOVIA SAO …      6 2994… KM 13                  373.</span></span>
+<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a><span class="co">#&gt; 3    17 AP     SANTANA    RAMAL MATAO …     14 6892… PIACACA                365.</span></span>
+<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more variable: geometry &lt;POINT [°]&gt;</span></span></code></pre></div>
 <p>Por padrão, a função busca pelo endereço mais próximo num raio
 aproximado de 1000 metros. No entanto, o usuário pode ajustar esse valor
 usando o parâmetro <code>dist_max</code> para definir a distância máxima
