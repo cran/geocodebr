@@ -14,7 +14,7 @@ Sys.setenv(OMP_THREAD_LIMIT = 2)
 
 ## ----eval = FALSE-------------------------------------------------------------
 # # install.packages("remotes")
-# remotes::install_github("ipeaGIT/geocodebr")
+# remotes::install_github("ipea/geocodebr")
 
 ## -----------------------------------------------------------------------------
 library(geocodebr)

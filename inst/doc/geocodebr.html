@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2026-04-13" />
+<meta name="date" content="2026-05-23" />
 
 <title>Introdução ao geocodebr</title>
 
@@ -339,7 +339,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">Introdução ao geocodebr</h1>
-<h4 class="date">2026-04-13</h4>
+<h4 class="date">2026-05-23</h4>
 
 
 
@@ -360,7 +360,7 @@ seguir:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;geocodebr&quot;</span>)</span></code></pre></div>
 <p>Caso prefira, a versão em desenvolvimento:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># install.packages(&quot;remotes&quot;)</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;ipeaGIT/geocodebr&quot;</span>)</span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;ipea/geocodebr&quot;</span>)</span></code></pre></div>
 </div>
 <div id="utilização" class="section level2">
 <h2>Utilização</h2>
@@ -428,7 +428,7 @@ seis categorias gerais de <code>precisao</code>, dependendo do nível de
 exatidão com que cada endereço de input foi encontrado nos dados do
 CNEFE. s resultados trazem ainda uma estimativa da incerteza da
 localização encontrado como um <code>desvio_metros</code>. Para mais
-informações, consulte a documentação da função ou a <a href="https://ipeagit.github.io/geocodebr/articles/geocode.html"><strong>vignette
+informações, consulte a documentação da função ou a <a href="https://ipea.github.io/geocodebr/articles/geocode.html"><strong>vignette
 “geocode”</strong></a>.</p>
 </div>
 <div id="geolocalização-reversa-de-coordenadas-espaciais-para-endereços" class="section level3">
@@ -436,7 +436,7 @@ informações, consulte a documentação da função ou a <a href="https://ipeag
 endereços</h3>
 <p>A função <code>geocode_reverso()</code>, por sua vez, permite a
 geolocalização reversa, ou seja, a busca de endereços próximos a um
-conjunto de coordenadas geográficas. Mais detalhes na <a href="https://ipeagit.github.io/geocodebr/articles/geocode_reverso.html"><strong>vignette
+conjunto de coordenadas geográficas. Mais detalhes na <a href="https://ipea.github.io/geocodebr/articles/geocode_reverso.html"><strong>vignette
 “geocode”</strong></a>.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># amostra de pontos espaciais</span></span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>pontos <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
@@ -495,17 +495,17 @@ dentro dela.</li>
 <p>Após rodar o código desta <em>vignette</em>, é provável que o seu
 <em>cache</em> esteja configurado como a seguir:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>geocodebr<span class="sc">::</span><span class="fu">listar_pasta_cache</span>()</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; [1] &quot;C:/Users/r1701707/AppData/Local/R/cache/R/geocodebr&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; [1] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr&quot;</span></span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>geocodebr<span class="sc">::</span><span class="fu">listar_dados_cache</span>()</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;C:/Users/r1701707/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio.parquet&quot;                                 </span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; [2] &quot;C:/Users/r1701707/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_cep.parquet&quot;                             </span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; [3] &quot;C:/Users/r1701707/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_cep_localidade.parquet&quot;                  </span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; [4] &quot;C:/Users/r1701707/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_localidade.parquet&quot;                      </span></span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; [5] &quot;C:/Users/r1701707/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_logradouro_cep_localidade.parquet&quot;       </span></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; [6] &quot;C:/Users/r1701707/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_logradouro_localidade.parquet&quot;           </span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; [7] &quot;C:/Users/r1701707/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_logradouro_numero_cep_localidade.parquet&quot;</span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [8] &quot;C:/Users/r1701707/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_logradouro_numero_localidade.parquet&quot;</span></span></code></pre></div>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio.parquet&quot;                                 </span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; [2] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_cep.parquet&quot;                             </span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; [3] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_cep_localidade.parquet&quot;                  </span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; [4] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_localidade.parquet&quot;                      </span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; [5] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_logradouro_cep_localidade.parquet&quot;       </span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; [6] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_logradouro_localidade.parquet&quot;           </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; [7] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_logradouro_numero_cep_localidade.parquet&quot;</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [8] &quot;C:/Users/rafap/AppData/Local/R/cache/R/geocodebr/geocodebr_data_release_v0.4.1/municipio_logradouro_numero_localidade.parquet&quot;</span></span></code></pre></div>
 </div>
 
 
